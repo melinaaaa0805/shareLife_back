@@ -7,7 +7,6 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { GroupsModule } from './groups/groups.module';
 import { TasksModule } from './tasks/tasks.module';
-import { AssignmentsModule } from './assignments/assignments.module';
 import { TaskAssignmentModule } from './task-assignment/task-assignment.module';
 import { GroupMemberModule } from './group-member/group-member.module';
 
@@ -18,7 +17,6 @@ import { GroupMemberModule } from './group-member/group-member.module';
     UsersModule,
     GroupsModule,
     TasksModule,
-    AssignmentsModule,
     TaskAssignmentModule,
     GroupMemberModule,
   ],
