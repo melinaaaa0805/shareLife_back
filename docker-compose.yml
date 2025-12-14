@@ -15,7 +15,7 @@ services:
       - db_data:/var/lib/postgresql/data
 
   backend:
-    build: ./backend-api
+    build: .
     container_name: sharelife_backend
     restart: always
     ports:

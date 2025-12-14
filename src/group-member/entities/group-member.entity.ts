@@ -1,10 +1,4 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  ManyToOne,
-  Column,
-  CreateDateColumn,
-} from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, ManyToOne, CreateDateColumn } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Group } from '../../groups/entities/group.entity';
 
@@ -13,14 +7,11 @@ export class GroupMember {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => User, { eager: true })
-  user: User;
-
-  @ManyToOne(() => Group, { eager: true })
+  @ManyToOne(() => Group, group => group.members, { onDelete: 'CASCADE' })
   group: Group;
 
-  @Column({ default: 'MEMBER' })
-  role: 'ADMIN' | 'MEMBER';
+  @ManyToOne(() => User, user => user.groupMemberships, { eager: true, onDelete: 'CASCADE' })
+  user: User;
 
   @CreateDateColumn()
   joinedAt: Date;
