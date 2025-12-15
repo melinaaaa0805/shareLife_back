@@ -1,9 +1,24 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateGroupMemberDto } from './dto/create-group-member.dto';
 import { UpdateGroupMemberDto } from './dto/update-group-member.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { GroupMember } from './entities/group-member.entity';
+import { Group } from '../groups/entities/group.entity';
+import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class GroupMemberService {
+  constructor(
+    @InjectRepository(GroupMember)
+    private groupMemberRepository: Repository<GroupMember>,
+
+    @InjectRepository(Group)
+    private groupRepository: Repository<Group>,
+
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+  ) {}
   create(createGroupMemberDto: CreateGroupMemberDto) {
     return 'This action adds a new groupMember';
   }
@@ -22,5 +37,39 @@ export class GroupMemberService {
 
   remove(id: number) {
     return `This action removes a #${id} groupMember`;
+  }
+  async addMemberByEmail(email: string, groupId: string): Promise<GroupMember> {
+    // 1️⃣ Vérifier utilisateur
+    const user = await this.userRepository.findOne({ where: { email } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    // 2️⃣ Vérifier groupe
+    const group = await this.groupRepository.findOne({
+      where: { id: groupId },
+    });
+    if (!group) {
+      throw new NotFoundException('Group not found');
+    }
+
+    // 3️⃣ Vérifier s’il est déjà membre
+    const existingMember = await this.groupMemberRepository.findOne({
+      where: {
+        user: { id: user.id },
+        group: { id: group.id },
+      },
+    });
+
+    if (existingMember) {
+      throw new BadRequestException('User is already member of this group');
+    }
+
+    // 4️⃣ Créer le lien
+    const member = this.groupMemberRepository.create({
+      user,
+      group
+     });
+
+    return this.groupMemberRepository.save(member);
   }
 }

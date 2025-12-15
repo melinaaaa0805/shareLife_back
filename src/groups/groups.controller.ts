@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Req, UseGuards, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Req, UseGuards, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { GroupsService } from './groups.service';
 import { Request } from 'express';
 import { CreateGroupDto } from './dto/create-group.dto';
@@ -7,6 +7,7 @@ import { UpdateGroupDto } from './dto/update-group.dto';
 import { AddMemberDto } from './dto/add-member.dto';
 import { UsersService } from '../users/users.service';
 import { User } from '../users/entities/user.entity';
+import { JwtUser } from '../auth/jwt-user.type';
 
 @Controller('groups')
 export class GroupsController {
@@ -40,6 +41,21 @@ async create(
   delete(@Param('id') id: string) {
     return this.groupsService.deleteGroup(id);
   }
+
+ @UseGuards(AuthGuard('jwt'))
+@Get('me')
+getMyGroups(@Req() req: Request & { user: JwtUser }) {
+  if (!req.user) {
+    throw new UnauthorizedException('User not authenticated');
+  }
+
+  return this.groupsService.getGroupsForUser(req.user.email);
+}
+@Get(':id')
+async getGroup(@Param('id') id: string) {
+  return this.groupsService.getGroupById(id);
+}
+
 
   @UseGuards(AuthGuard('jwt'))
   @Post(':id/members')

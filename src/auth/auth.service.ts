@@ -16,25 +16,32 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterUserDto) {
-    const { email, password, firstName } = registerDto;
-    const existingUser = await this.userRepository.findOne({ where: { email } });
-    if (existingUser) {
-      throw new UnauthorizedException('Email already in use');
-    }
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = this.userRepository.create({
-      email,
-      firstName,
-      password: hashedPassword,
-      role: 'MEMBER',
-    });
-    await this.userRepository.save(user);
-    const payload = { sub: user.id };
-    return {
-      user,
-      access_token: this.jwtService.sign(payload),
-    };
+  const { email, password, firstName } = registerDto;
+
+  const existingUser = await this.userRepository.findOne({ where: { email } });
+  if (existingUser) {
+    throw new UnauthorizedException('Email already in use');
   }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  // TypeScript est content car toutes les propriétés existent
+  const user = this.userRepository.create({
+    email,
+    firstName,
+    password: hashedPassword,
+    role: 'MEMBER', // colonne bien définie dans User
+  });
+
+  await this.userRepository.save(user);
+
+  const payload = { sub: user.id, email: user.email};
+  return {
+    user,
+    access_token: this.jwtService.sign(payload),
+  };
+}
+
 
   async login(loginDto: LoginUserDto) {
     const { email, password } = loginDto;
@@ -42,7 +49,7 @@ export class AuthService {
     if (!user) throw new UnauthorizedException('Invalid credentials');
     const passwordValid = await bcrypt.compare(password, user.password);
     if (!passwordValid) throw new UnauthorizedException('Invalid credentials');
-    const payload = { sub: user.id };
+    const payload = { sub: user.id,   email: user.email };
     return {
       user,
       access_token: this.jwtService.sign(payload),

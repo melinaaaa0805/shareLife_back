@@ -1,15 +1,17 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
 import { GroupMemberService } from './group-member.service';
 import { CreateGroupMemberDto } from './dto/create-group-member.dto';
 import { UpdateGroupMemberDto } from './dto/update-group-member.dto';
-
 @Controller('group-member')
 export class GroupMemberController {
   constructor(private readonly groupMemberService: GroupMemberService) {}
 
-  @Post()
-  create(@Body() createGroupMemberDto: CreateGroupMemberDto) {
-    return this.groupMemberService.create(createGroupMemberDto);
+   @Post(':id')
+  async addMemberToGroup(
+    @Body() body: { email: string },@Param('id') id: string
+  ) {
+    const { email } = body;
+    return this.groupMemberService.addMemberByEmail(email, id);
   }
 
   @Get()

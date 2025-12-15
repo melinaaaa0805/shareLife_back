@@ -29,6 +29,10 @@ Créer et assigner des tâches avec suivi du statut
 
 Calculer la charge par utilisateur pour visualiser l’équilibre
 
+Créer et partager une liste de course
+
+Possibilité d'ajouter une fonction "qu'est-ce qu'on mange ce soir?"
+
 Envoyer des notifications pour les tâches à réaliser
 
 Permettre une expérience simple, rapide et intuitive

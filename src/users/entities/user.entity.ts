@@ -16,8 +16,12 @@ export class User {
   @Column()
   firstName: string;
 
-  @Column()
+@Column({ nullable: true })
   lastName: string;
+
+   @Column({ default: 'MEMBER' }) // tu peux mettre MEMBER par défaut
+  role: string;
+
 
   // Groupes que l'utilisateur possède
   @OneToMany(() => Group, group => group.owner)
