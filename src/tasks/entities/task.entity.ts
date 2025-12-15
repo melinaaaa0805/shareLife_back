@@ -22,6 +22,9 @@ export class Task {
   @Column({ nullable: true })
   dueDate: Date;
 
+   @Column({ nullable: true })
+  time: String;
+
   @ManyToOne(() => Group)
   group: Group;
 

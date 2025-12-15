@@ -7,6 +7,7 @@ import { GroupMember } from '../group-member/entities/group-member.entity';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 import { AddMemberDto } from './dto/add-member.dto';
+import { GroupResponseDto } from './dto/group-response.dto';
 
 @Injectable()
 export class GroupsService {
@@ -62,4 +63,84 @@ export class GroupsService {
     });
     if (!result.affected) throw new NotFoundException('Membre non trouvé dans le groupe');
   }
+async getGroupsForUser(email: string): Promise<GroupResponseDto[]> {
+  // 1️⃣ Groupes dont je suis propriétaire
+  const ownedGroups = await this.groupRepository.find({
+    where: { owner: { email } },
+    relations: {
+      members: {
+        user: true,
+      },
+    },
+  });
+
+  // 2️⃣ Groupes dont je suis membre
+  const memberLinks = await this.groupMemberRepository.find({
+    where: { user: { email } },
+    relations: {
+      group: {
+        members: {
+          user: true,
+        },
+      },
+    },
+  });
+
+  const memberGroups = memberLinks.map((gm) => gm.group);
+
+  // 3️⃣ Fusion sans doublons
+  const allGroups = [
+    ...ownedGroups,
+    ...memberGroups.filter(
+      (g) => !ownedGroups.find((og) => og.id === g.id),
+    ),
+  ];
+
+  return allGroups.map((group) => ({
+  id: group.id,
+  name: group.name,
+  createdAt: group.createdAt,
+  owner : group.owner,
+  members: group.members.map((m) => ({
+    id: m.user.id,
+    email: m.user.email,
+    firstName: m.user.firstName,
+  })),
+}));
+
+
+
+}
+async getGroupById(groupId: string) {
+  const group = await this.groupRepository.findOne({
+    where: { id: groupId },
+    relations: [
+      'owner',
+      'members',
+      'members.user',
+    ],
+  });
+
+  if (!group) {
+    throw new NotFoundException('Groupe non trouvé');
+  }
+
+  // 🔄 mapping vers DTO frontend
+  return {
+    id: group.id,
+    name: group.name,
+    createdAt: group.createdAt,
+    owner: {
+      id: group.owner.id,
+      email: group.owner.email,
+      firstName: group.owner.firstName,
+    },
+    members: group.members.map((m) => ({
+      id: m.user.id,
+      email: m.user.email,
+      firstName: m.user.firstName,
+    })),
+  };
+}
+
 }
