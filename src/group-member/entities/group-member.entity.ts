@@ -7,10 +7,10 @@ export class GroupMember {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Group, group => group.members, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Group, { onDelete: 'CASCADE' })
   group: Group;
 
-  @ManyToOne(() => User, user => user.groupMemberships, { eager: true, onDelete: 'CASCADE' })
+  @ManyToOne(() => User, { eager: true, onDelete: 'CASCADE' })
   user: User;
 
   @CreateDateColumn()

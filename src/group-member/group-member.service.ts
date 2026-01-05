@@ -63,7 +63,6 @@ export class GroupMemberService {
     if (existingMember) {
       throw new BadRequestException('User is already member of this group');
     }
-
     // 4️⃣ Créer le lien
     const member = this.groupMemberRepository.create({
       user,
@@ -71,5 +70,23 @@ export class GroupMemberService {
      });
 
     return this.groupMemberRepository.save(member);
+  }
+  /**
+   * Récupère tous les utilisateurs d'un groupe
+   * @param groupId id du groupe
+   * @returns liste des utilisateurs
+   */
+  async getUsersByGroup(groupId: string): Promise<User[]> {
+    const members = await this.groupMemberRepository.find({
+      where: { group: { id: groupId } },
+      relations: ['user'],
+    });
+
+    if (!members.length) {
+      throw new NotFoundException('Aucun membre trouvé pour ce groupe');
+    }
+
+    // Retourne uniquement les utilisateurs
+    return members.map((m) => m.user);
   }
 }

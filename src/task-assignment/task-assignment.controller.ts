@@ -17,9 +17,9 @@ export class TaskAssignmentController {
     return this.taskAssignmentService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.taskAssignmentService.findOne(+id);
+  @Get('/users/:id')
+  findByUser(@Param('id') id: string) {
+    return this.taskAssignmentService.findByUser(id);
   }
 
   @Patch(':id')

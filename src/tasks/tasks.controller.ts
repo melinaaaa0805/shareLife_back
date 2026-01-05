@@ -33,4 +33,10 @@ export class TasksController {
   remove(@Param('id') id: string) {
     return this.tasksService.remove(+id);
   }
+  @UseGuards(AuthGuard('jwt'))
+@Get('unassigned')
+async getUnassigned() {
+  return this.tasksService.getUnassignedTasks();
+}
+
 }

@@ -1,36 +1,44 @@
+
+import { IsNotEmpty, IsString } from 'class-validator';
 import { Group } from '../../groups/entities/group.entity';
+import { TaskAssignment } from '../../task-assignment/entities/task-assignment.entity';
 import { User } from '../../users/entities/user.entity';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, CreateDateColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, CreateDateColumn, OneToMany } from 'typeorm';
 
 @Entity()
 export class Task {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @IsString()
+  @IsNotEmpty()
   title: string;
 
-  @Column({ nullable: true })
-  description: string;
+  @Column({ type: 'varchar', nullable: true })
+  description: string | null;
 
   @Column({ default: 1 })
   weight: number;
 
-  @Column({ default: 'ONCE' })
+  @Column({ type: 'varchar', default: 'ONCE' })
   frequency: 'ONCE' | 'DAILY' | 'WEEKLY';
 
-  @Column({ nullable: true })
-  dueDate: Date;
+  @Column({ type: 'timestamp', nullable: true })
+  dueDate: Date | null;
 
-   @Column({ nullable: true })
-  time: String;
+  @Column({ type: 'varchar', nullable: true })
+  time: string | null;
 
-  @ManyToOne(() => Group)
+  @ManyToOne(() => Group, { onDelete: 'CASCADE' })
   group: Group;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { onDelete: 'SET NULL' })
   createdBy: User;
 
   @CreateDateColumn()
   createdAt: Date;
+  // Dans task.entity.ts
+@OneToMany(() => TaskAssignment, a => a.task)
+taskAssignments: TaskAssignment[];
+
 }
