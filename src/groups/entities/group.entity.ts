@@ -14,10 +14,11 @@ export class Group {
   createdAt: Date;
 
   // Relation vers l'utilisateur propriétaire
-  @ManyToOne(() => User, user => user.ownedGroups, { eager: true })
+  @ManyToOne(() => User, user => user.id, { eager: true })
   owner: User;
 
-  // Relation vers les membres du groupe
-  @OneToMany(() => GroupMember, member => member.group, { cascade: true })
-  members: GroupMember[];
+  @OneToMany(() => GroupMember, gm => gm.group, { eager: true })
+members: GroupMember[];
+
+
 }

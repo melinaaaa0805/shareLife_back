@@ -67,23 +67,13 @@ async getGroupsForUser(email: string): Promise<GroupResponseDto[]> {
   // 1️⃣ Groupes dont je suis propriétaire
   const ownedGroups = await this.groupRepository.find({
     where: { owner: { email } },
-    relations: {
-      members: {
-        user: true,
-      },
-    },
+    relations: ['owner'],
   });
 
-  // 2️⃣ Groupes dont je suis membre
+  // 2️⃣ Liens membership → on récupère juste les groups (sans charger members ici)
   const memberLinks = await this.groupMemberRepository.find({
     where: { user: { email } },
-    relations: {
-      group: {
-        members: {
-          user: true,
-        },
-      },
-    },
+    relations: ['group'],
   });
 
   const memberGroups = memberLinks.map((gm) => gm.group);
@@ -96,21 +86,31 @@ async getGroupsForUser(email: string): Promise<GroupResponseDto[]> {
     ),
   ];
 
-  return allGroups.map((group) => ({
-  id: group.id,
-  name: group.name,
-  createdAt: group.createdAt,
-  owner : group.owner,
-  members: group.members.map((m) => ({
-    id: m.user.id,
-    email: m.user.email,
-    firstName: m.user.firstName,
-  })),
-}));
+  // 4️⃣ Pour chaque groupe, on charge ses membres dans la table intermédiaire
+  const groupsWithMembers = await Promise.all(
+    allGroups.map(async (group) => {
+      const members = await this.groupMemberRepository.find({
+        where: { group: { id: group.id } },
+        relations: ['user'],
+      });
 
+      return {
+        id: group.id,
+        name: group.name,
+        createdAt: group.createdAt,
+        owner: group.owner,
+        members: members.map((m: GroupMember) => ({
+          id: m.user.id,
+          email: m.user.email,
+          firstName: m.user.firstName,
+        })),
+      };
+    }),
+  );
 
-
+  return groupsWithMembers;
 }
+
 async getGroupById(groupId: string) {
   const group = await this.groupRepository.findOne({
     where: { id: groupId },
