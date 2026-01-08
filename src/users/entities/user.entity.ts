@@ -1,6 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-import { Group } from '../../groups/entities/group.entity';
-import { GroupMember } from '../../group-member/entities/group-member.entity';
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 @Entity()
 export class User {
@@ -19,7 +17,6 @@ export class User {
   @Column({ nullable: true })
   lastName: string;
 
-   @Column({ default: 'MEMBER' }) // tu peux mettre MEMBER par défaut
+  @Column({ default: 'MEMBER' }) // tu peux mettre MEMBER par défaut
   role: string;
-
 }

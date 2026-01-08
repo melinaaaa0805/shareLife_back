@@ -1,34 +1,30 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Body, Param, UseGuards, Post } from '@nestjs/common';
 import { TaskAssignmentService } from './task-assignment.service';
-import { CreateTaskAssignmentDto } from './dto/create-task-assignment.dto';
-import { UpdateTaskAssignmentDto } from './dto/update-task-assignment.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { CurrentUser } from '../help';
+import { TaskAssignment } from './entities/task-assignment.entity';
+import { User } from '../users/entities/user.entity';
+import { Task } from '../tasks/entities/task.entity';
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('task-assignment')
 export class TaskAssignmentController {
   constructor(private readonly taskAssignmentService: TaskAssignmentService) {}
 
-  @Post()
-  create(@Body() createTaskAssignmentDto: CreateTaskAssignmentDto) {
-    return this.taskAssignmentService.create(createTaskAssignmentDto);
+  @Post(':idTask')
+  create(
+    @Param('idTask') idTask: string,
+    @CurrentUser() user: User,
+  ): Promise<TaskAssignment> {
+    return this.taskAssignmentService.create(idTask, user);
   }
-
-  @Get()
-  findAll() {
-    return this.taskAssignmentService.findAll();
-  }
-
   @Get('/users/:id')
   findByUser(@Param('id') id: string) {
     return this.taskAssignmentService.findByUser(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTaskAssignmentDto: UpdateTaskAssignmentDto) {
-    return this.taskAssignmentService.update(+id, updateTaskAssignmentDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.taskAssignmentService.remove(+id);
+  @Get('/unassigned/:idGroup')
+  findUnassignedTasks(@Param('idGroup') idGroup: string): Promise<Task[]> {
+    return this.taskAssignmentService.getUnassignedTasks(idGroup);
   }
 }

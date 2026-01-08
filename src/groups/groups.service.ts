@@ -8,6 +8,8 @@ import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 import { AddMemberDto } from './dto/add-member.dto';
 import { GroupResponseDto } from './dto/group-response.dto';
+import { defaultTasks } from '../tasks/tasks.seeds';
+import { Task } from '../tasks/entities/task.entity';
 
 @Injectable()
 export class GroupsService {
@@ -18,6 +20,8 @@ export class GroupsService {
     private readonly groupMemberRepository: Repository<GroupMember>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Task)
+    private readonly taskRepository: Repository<Task>,
   ) {}
 
   async createGroup(dto: CreateGroupDto, owner: User): Promise<Group> {
@@ -25,9 +29,17 @@ export class GroupsService {
       ...dto,
       owner,
     });
+    await this.addDefaultTasksToGroup(group, owner);
     return this.groupRepository.save(group);
   }
-
+  private async addDefaultTasksToGroup(group: Group, user: User) {
+    const tasks = defaultTasks.map((task) => ({
+      ...task,
+      isTemplate: true,
+      createdBy: user,
+    }));
+    await this.taskRepository.save(tasks);
+  }
   async updateGroup(id: string, dto: UpdateGroupDto): Promise<Group> {
     const group = await this.groupRepository.findOne({ where: { id } });
     if (!group) throw new NotFoundException('Groupe non trouvé');
@@ -41,10 +53,14 @@ export class GroupsService {
   }
 
   async addMember(groupId: string, dto: AddMemberDto): Promise<GroupMember> {
-    const group = await this.groupRepository.findOne({ where: { id: groupId } });
+    const group = await this.groupRepository.findOne({
+      where: { id: groupId },
+    });
     if (!group) throw new NotFoundException('Groupe non trouvé');
 
-    const user = await this.userRepository.findOne({ where: { id: dto.userId } });
+    const user = await this.userRepository.findOne({
+      where: { id: dto.userId },
+    });
     if (!user) throw new NotFoundException('Utilisateur non trouvé');
 
     const existing = await this.groupMemberRepository.findOne({
@@ -61,86 +77,80 @@ export class GroupsService {
       group: { id: groupId },
       user: { id: userId },
     });
-    if (!result.affected) throw new NotFoundException('Membre non trouvé dans le groupe');
+    if (!result.affected)
+      throw new NotFoundException('Membre non trouvé dans le groupe');
   }
-async getGroupsForUser(email: string): Promise<GroupResponseDto[]> {
-  // 1️⃣ Groupes dont je suis propriétaire
-  const ownedGroups = await this.groupRepository.find({
-    where: { owner: { email } },
-    relations: ['owner'],
-  });
+  async getGroupsForUser(email: string): Promise<GroupResponseDto[]> {
+    // 1️⃣ Groupes dont je suis propriétaire
+    const ownedGroups = await this.groupRepository.find({
+      where: { owner: { email } },
+      relations: ['owner'],
+    });
 
-  // 2️⃣ Liens membership → on récupère juste les groups (sans charger members ici)
-  const memberLinks = await this.groupMemberRepository.find({
-    where: { user: { email } },
-    relations: ['group'],
-  });
+    // 2️⃣ Liens membership → on récupère juste les groups (sans charger members ici)
+    const memberLinks = await this.groupMemberRepository.find({
+      where: { user: { email } },
+      relations: ['group'],
+    });
 
-  const memberGroups = memberLinks.map((gm) => gm.group);
+    const memberGroups = memberLinks.map((gm) => gm.group);
 
-  // 3️⃣ Fusion sans doublons
-  const allGroups = [
-    ...ownedGroups,
-    ...memberGroups.filter(
-      (g) => !ownedGroups.find((og) => og.id === g.id),
-    ),
-  ];
+    // 3️⃣ Fusion sans doublons
+    const allGroups = [
+      ...ownedGroups,
+      ...memberGroups.filter((g) => !ownedGroups.find((og) => og.id === g.id)),
+    ];
 
-  // 4️⃣ Pour chaque groupe, on charge ses membres dans la table intermédiaire
-  const groupsWithMembers = await Promise.all(
-    allGroups.map(async (group) => {
-      const members = await this.groupMemberRepository.find({
-        where: { group: { id: group.id } },
-        relations: ['user'],
-      });
+    // 4️⃣ Pour chaque groupe, on charge ses membres dans la table intermédiaire
+    const groupsWithMembers = await Promise.all(
+      allGroups.map(async (group) => {
+        const members = await this.groupMemberRepository.find({
+          where: { group: { id: group.id } },
+          relations: ['user'],
+        });
 
-      return {
-        id: group.id,
-        name: group.name,
-        createdAt: group.createdAt,
-        owner: group.owner,
-        members: members.map((m: GroupMember) => ({
-          id: m.user.id,
-          email: m.user.email,
-          firstName: m.user.firstName,
-        })),
-      };
-    }),
-  );
+        return {
+          id: group.id,
+          name: group.name,
+          createdAt: group.createdAt,
+          owner: group.owner,
+          members: members.map((m: GroupMember) => ({
+            id: m.user.id,
+            email: m.user.email,
+            firstName: m.user.firstName,
+          })),
+        };
+      }),
+    );
 
-  return groupsWithMembers;
-}
-
-async getGroupById(groupId: string) {
-  const group = await this.groupRepository.findOne({
-    where: { id: groupId },
-    relations: [
-      'owner',
-      'members',
-      'members.user',
-    ],
-  });
-
-  if (!group) {
-    throw new NotFoundException('Groupe non trouvé');
+    return groupsWithMembers;
   }
 
-  // 🔄 mapping vers DTO frontend
-  return {
-    id: group.id,
-    name: group.name,
-    createdAt: group.createdAt,
-    owner: {
-      id: group.owner.id,
-      email: group.owner.email,
-      firstName: group.owner.firstName,
-    },
-    members: group.members.map((m) => ({
-      id: m.user.id,
-      email: m.user.email,
-      firstName: m.user.firstName,
-    })),
-  };
-}
+  async getGroupById(groupId: string) {
+    const group = await this.groupRepository.findOne({
+      where: { id: groupId },
+      relations: ['owner', 'members', 'members.user'],
+    });
 
+    if (!group) {
+      throw new NotFoundException('Groupe non trouvé');
+    }
+
+    // 🔄 mapping vers DTO frontend
+    return {
+      id: group.id,
+      name: group.name,
+      createdAt: group.createdAt,
+      owner: {
+        id: group.owner.id,
+        email: group.owner.email,
+        firstName: group.owner.firstName,
+      },
+      members: group.members.map((m) => ({
+        id: m.user.id,
+        email: m.user.email,
+        firstName: m.user.firstName,
+      })),
+    };
+  }
 }

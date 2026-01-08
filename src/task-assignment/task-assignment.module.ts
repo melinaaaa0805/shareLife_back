@@ -5,12 +5,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { TaskAssignment } from './entities/task-assignment.entity';
 import { User } from '../users/entities/user.entity';
 import { UsersModule } from '../users/users.module';
-import { TasksModule } from '../tasks/tasks.module';
+import { Task } from '../tasks/entities/task.entity';
+import { Group } from '../groups/entities/group.entity';
+import { ShoppingList } from '../shopping-list/entities/shopping-list.entity';
 @Module({
   imports: [
-    TypeOrmModule.forFeature([TaskAssignment, User]), // ← repo dispo ici
-    UsersModule
-    ],
+    TypeOrmModule.forFeature([TaskAssignment, User, Task, Group, ShoppingList]), // ← repo dispo ici
+    UsersModule,
+  ],
   providers: [TaskAssignmentService],
   controllers: [TaskAssignmentController],
   exports: [TaskAssignmentService],

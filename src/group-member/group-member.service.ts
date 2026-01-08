@@ -1,6 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { CreateGroupMemberDto } from './dto/create-group-member.dto';
-import { UpdateGroupMemberDto } from './dto/update-group-member.dto';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { GroupMember } from './entities/group-member.entity';
@@ -19,9 +17,6 @@ export class GroupMemberService {
     @InjectRepository(User)
     private userRepository: Repository<User>,
   ) {}
-  create(createGroupMemberDto: CreateGroupMemberDto) {
-    return 'This action adds a new groupMember';
-  }
 
   findAll() {
     return `This action returns all groupMember`;
@@ -31,44 +26,29 @@ export class GroupMemberService {
     return `This action returns a #${id} groupMember`;
   }
 
-  update(id: number, updateGroupMemberDto: UpdateGroupMemberDto) {
-    return `This action updates a #${id} groupMember`;
-  }
-
   remove(id: number) {
     return `This action removes a #${id} groupMember`;
   }
   async addMemberByEmail(email: string, groupId: string): Promise<GroupMember> {
+    console.log('idgroup ', groupId);
+    console.log('email', email);
     // 1️⃣ Vérifier utilisateur
-    const user = await this.userRepository.findOne({ where: { email } });
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-    // 2️⃣ Vérifier groupe
     const group = await this.groupRepository.findOne({
       where: { id: groupId },
     });
-    if (!group) {
-      throw new NotFoundException('Group not found');
-    }
+    if (!group) throw new NotFoundException('Groupe non trouvé');
 
-    // 3️⃣ Vérifier s’il est déjà membre
-    const existingMember = await this.groupMemberRepository.findOne({
-      where: {
-        user: { id: user.id },
-        group: { id: group.id },
-      },
+    const user = await this.userRepository.findOne({
+      where: { email: email },
     });
+    if (!user) throw new NotFoundException('Utilisateur non trouvé');
 
-    if (existingMember) {
-      throw new BadRequestException('User is already member of this group');
-    }
-    // 4️⃣ Créer le lien
-    const member = this.groupMemberRepository.create({
-      user,
-      group
-     });
+    const existing = await this.groupMemberRepository.findOne({
+      where: { group: { id: groupId }, user: { id: user.id } },
+    });
+    if (existing) return existing; // éviter doublon
 
+    const member = this.groupMemberRepository.create({ group, user });
     return this.groupMemberRepository.save(member);
   }
   /**
