@@ -9,6 +9,7 @@ import { GroupsModule } from './groups/groups.module';
 import { TasksModule } from './tasks/tasks.module';
 import { TaskAssignmentModule } from './task-assignment/task-assignment.module';
 import { GroupMemberModule } from './group-member/group-member.module';
+import { ShoppingListModule } from './shopping-list/shopping-list.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { GroupMemberModule } from './group-member/group-member.module';
     TasksModule,
     TaskAssignmentModule,
     GroupMemberModule,
+    ShoppingListModule,
   ],
   controllers: [AppController],
   providers: [AppService],

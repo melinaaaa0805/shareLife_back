@@ -1,36 +1,44 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateTaskAssignmentDto } from './dto/create-task-assignment.dto';
-import { UpdateTaskAssignmentDto } from './dto/update-task-assignment.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TaskAssignment } from './entities/task-assignment.entity';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
+import { Task } from '../tasks/entities/task.entity';
 @Injectable()
 export class TaskAssignmentService {
-    constructor(
-        @InjectRepository(TaskAssignment)
+  constructor(
+    @InjectRepository(TaskAssignment)
     private readonly assignmentRepo: Repository<TaskAssignment>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
-      ) {}
-  create(createTaskAssignmentDto: CreateTaskAssignmentDto) {
-    return 'This action adds a new taskAssignment';
-  }
+    @InjectRepository(Task)
+    private taskRepo: Repository<Task>,
+  ) {}
+  async getUnassignedTasks(groupId: string) {
+    const assignments = await this.assignmentRepo.find({
+      where: { user: IsNull(), task: { group: { id: groupId } } },
+      relations: ['task'],
+    });
+    const tasks = assignments.flatMap((a) => a.task);
 
-  findAll() {
-    return `This action returns all taskAssignment`;
+    return tasks;
   }
+  async create(id: string, user: User): Promise<TaskAssignment> {
+    const task = await this.taskRepo.findOne({
+      where: { id: id },
+    });
 
-  findOne(idUser: number) {
-    return `This action returns a #${idUser} taskAssignment`;
-  }
+    if (!task) {
+      throw new NotFoundException('Task not found');
+    }
 
-  update(id: number, updateTaskAssignmentDto: UpdateTaskAssignmentDto) {
-    return `This action updates a #${id} taskAssignment`;
-  }
+    const assignment = this.assignmentRepo.create({
+      task,
+      user,
+      status: 'PENDING',
+    });
 
-  remove(id: number) {
-    return `This action removes a #${id} taskAssignment`;
+    return this.assignmentRepo.save(assignment);
   }
   async findByUser(id: string) {
     // On récupère l'user via son email
@@ -46,20 +54,24 @@ export class TaskAssignmentService {
       order: { completedAt: 'DESC' },
     });
 
-    // On retourne juste les tâches, mais tu peux aussi retourner l'assignment si tu veux le status
-    return assignments.map(a => ({
+    return assignments.map((a) => ({
       id: a.task.id,
       title: a.task.title,
       description: a.task.description,
       weight: a.task.weight,
       frequency: a.task.frequency,
-      dueDate: a.task.dueDate,
-      time: a.task.time,
+      weekNumber: a.task.weekNumber,
+      year: a.task.year,
+      dayOfWeek: a.task.dayOfWeek,
+      duration: a.task.duration,
+      date: a.task.date,
       status: a.status,
       completedAt: a.completedAt,
+      completedAtDate: a.completedAt
+        ? a.completedAt.toISOString().split('T')[0]
+        : null,
       group: a.task.group,
-      createdBy: a.user,
+      createdBy: a.task.createdBy,
     }));
   }
-  
 }

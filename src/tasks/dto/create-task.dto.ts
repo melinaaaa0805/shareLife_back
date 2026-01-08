@@ -1,10 +1,46 @@
+import {
+  IsNotEmpty,
+  IsString,
+  IsNumber,
+  IsUUID,
+  IsBoolean,
+} from 'class-validator';
+import { Frequency } from '../enums/frequency.enum';
 export class CreateTaskDto {
+  @IsString()
+  @IsNotEmpty()
   title: string;
+
+  @IsString()
   description?: string;
+
+  @IsString()
+  frequency: Frequency.ONCE | Frequency.DAILY | Frequency.WEEKLY;
+
+  @IsNumber()
+  weekNumber: number;
+
+  @IsNumber()
+  year: number;
+
+  @IsNumber()
+  dayOfWeek: number;
+
+  @IsNumber()
+  duration?: number;
+
+  @IsString()
+  date?: string;
+
+  @IsNumber()
   weight?: number;
-  frequency?: 'ONCE' | 'DAILY' | 'WEEKLY';
-  dueDate?: Date;
-  time?: string;
+
+  @IsUUID()
   groupId: string;
-  userId: string;
+
+  @IsUUID()
+  createdById: string;
+
+  @IsBoolean()
+  isTemplate: boolean;
 }
