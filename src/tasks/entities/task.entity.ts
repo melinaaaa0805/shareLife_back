@@ -1,7 +1,13 @@
 import { Group } from '../../groups/entities/group.entity';
 import { TaskAssignment } from '../../task-assignment/entities/task-assignment.entity';
 import { User } from '../../users/entities/user.entity';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 @Entity()
 export class Task {
   @PrimaryGeneratedColumn('uuid')
@@ -31,8 +37,8 @@ export class Task {
   @ManyToOne(() => Group, { onDelete: 'CASCADE' })
   group: Group;
 
-  @ManyToOne(() => TaskAssignment, { onDelete: 'CASCADE' })
-  taskAssignment: TaskAssignment[];
+  @OneToMany(() => TaskAssignment, (ta) => ta.task)
+  assignments: TaskAssignment[];
 
   @ManyToOne(() => User, { onDelete: 'SET NULL' })
   createdBy: User;

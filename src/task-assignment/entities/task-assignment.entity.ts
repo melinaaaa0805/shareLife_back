@@ -7,7 +7,9 @@ export class TaskAssignment {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Task, { eager: true })
+  @ManyToOne(() => Task, (task) => task.assignments, {
+    onDelete: 'CASCADE',
+  })
   task: Task;
 
   @ManyToOne(() => User, { eager: true })

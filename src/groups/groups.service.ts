@@ -29,14 +29,16 @@ export class GroupsService {
       ...dto,
       owner,
     });
+    const result = this.groupRepository.save(group);
     await this.addDefaultTasksToGroup(group, owner);
-    return this.groupRepository.save(group);
+    return result;
   }
   private async addDefaultTasksToGroup(group: Group, user: User) {
     const tasks = defaultTasks.map((task) => ({
       ...task,
       isTemplate: true,
       createdBy: user,
+      group: group,
     }));
     await this.taskRepository.save(tasks);
   }
@@ -129,7 +131,7 @@ export class GroupsService {
   async getGroupById(groupId: string) {
     const group = await this.groupRepository.findOne({
       where: { id: groupId },
-      relations: ['owner', 'members', 'members.user'],
+      relations: ['owner', 'members', 'members.user', 'task'],
     });
 
     if (!group) {

@@ -1,22 +1,23 @@
-# Stage 1: build
-FROM node:20-alpine AS build
-
-WORKDIR /app
-
-COPY package*.json ./
-RUN npm install
-
-COPY . .
-RUN npm run build
-
-# Stage 2: production
+# Base image
 FROM node:20-alpine
 
+# Dossier de travail
 WORKDIR /app
 
+# Copier package.json et package-lock.json
 COPY package*.json ./
-RUN npm install --production
 
-COPY --from=build /app/dist ./dist
+# Installer toutes les dépendances (dev + prod)
+RUN npm install
 
-CMD ["node", "dist/main.js"]
+# Installer Nest CLI globalement pour pouvoir utiliser "nest start --watch"
+RUN npm install -g @nestjs/cli
+
+# Copier tout le code source
+COPY . .
+
+# Exposer le port de Nest
+EXPOSE 3000
+
+# Lancer Nest en mode dev avec watch
+CMD ["npm", "run", "start:dev"]

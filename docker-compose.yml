@@ -1,4 +1,4 @@
-version: '3.9'
+version: '3.9' # optionnel, mais conseillé de mettre la version
 
 services:
   db:
@@ -10,7 +10,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: sharelife_db
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - db_data:/var/lib/postgresql/data
 
@@ -19,7 +19,7 @@ services:
     container_name: sharelife_backend
     restart: always
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       DB_HOST: db
       DB_PORT: 5432
@@ -29,6 +29,10 @@ services:
       JWT_SECRET: supersecret
     depends_on:
       - db
+    volumes:
+      - .:/app # monte ton code local dans le container
+      - /app/node_modules # pour éviter de réécraser node_modules
+    command: npm run start:dev # lance Nest avec hot reload
 
 volumes:
   db_data:

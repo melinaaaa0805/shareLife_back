@@ -29,10 +29,6 @@ export class TasksController {
     return this.tasksService.create(createTaskDto, groupId, user);
   }
 
-  @Get()
-  findAll() {
-    return this.tasksService.findAll();
-  }
   @Get('week/:groupId/:year/:weekNumber')
   async getTasksByWeek(
     @Param('groupId') groupId: string,
@@ -48,6 +44,13 @@ export class TasksController {
   @Get(':groupId/template')
   async getTasksTemplate(@Param('groupId') groupId: string) {
     return this.tasksService.findTemplate(groupId);
+  }
+  @Get(':groupId/:date')
+  async getTasksForDay(
+    @Param('groupId') groupId: string,
+    @Param('date') date: string,
+  ) {
+    return this.tasksService.findByDateAndIdGroup(groupId, date);
   }
   @Get('/week')
   async getWeekTasks(
