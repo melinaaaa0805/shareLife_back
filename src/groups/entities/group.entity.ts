@@ -9,6 +9,7 @@ import {
 import { User } from '../../users/entities/user.entity';
 import { GroupMember } from '../../group-member/entities/group-member.entity';
 import { ShoppingList } from '../../shopping-list/entities/shopping-list.entity';
+import { Task } from '../../tasks/entities/task.entity';
 
 @Entity()
 export class Group {
@@ -29,4 +30,7 @@ export class Group {
 
   @OneToMany(() => ShoppingList, (list) => list.group)
   shoppingLists: ShoppingList[];
+
+  @OneToMany(() => Task, (task) => task.group, { eager: true })
+  task: Task[];
 }

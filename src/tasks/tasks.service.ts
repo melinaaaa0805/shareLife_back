@@ -6,6 +6,7 @@ import { Task } from './entities/task.entity';
 import { Group } from '../groups/entities/group.entity';
 import { User } from '../users/entities/user.entity';
 import { GroupsService } from '../groups/groups.service';
+import { Frequency } from './enums/frequency.enum';
 
 @Injectable()
 export class TasksService {
@@ -26,25 +27,65 @@ export class TasksService {
       throw new NotFoundException('Groupe introuvable');
     }
 
-    const task = this.taskRepository.create({
-      title: createTaskDto.title,
-      description: createTaskDto.description ?? undefined,
-      frequency: createTaskDto.frequency,
-      weekNumber: createTaskDto.weekNumber,
-      year: createTaskDto.year,
-      dayOfWeek: createTaskDto.dayOfWeek,
-      duration: createTaskDto.duration ?? null,
-      date: createTaskDto.date ?? null,
-      weight: createTaskDto.weight ?? 1,
-      isTemplate: false,
+    const tasksToSave = [];
 
-      // 🔧 Fix relations
-      group: group, // ← on assigne l'entité group trouvée au dessus
-      createdBy: user, // ← user vient du controller via req.user
-    });
+    // Convertir la date string en Date JS pour manipuler les jours
+    const startDate = createTaskDto.date
+      ? new Date(createTaskDto.date)
+      : new Date();
 
-    return this.taskRepository.save(task);
+    function formatDate(d: Date) {
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    if (createTaskDto.frequency === Frequency.DAILY) {
+      for (let i = 0; i < 7; i++) {
+        const taskDate = new Date(startDate);
+        const dayOffset = i - ((startDate.getDay() + 6) % 7); // 0 = lundi
+        taskDate.setDate(startDate.getDate() + dayOffset);
+
+        const task = this.taskRepository.create({
+          title: createTaskDto.title,
+          description: createTaskDto.description ?? undefined,
+          frequency: createTaskDto.frequency,
+          weekNumber: createTaskDto.weekNumber,
+          year: createTaskDto.year,
+          dayOfWeek: i,
+          duration: createTaskDto.duration ?? null,
+          date: formatDate(taskDate), // 👈 en string YYYY-MM-DD
+          weight: createTaskDto.weight ?? 1,
+          isTemplate: false,
+          group,
+          createdBy: user,
+        });
+
+        tasksToSave.push(task);
+      }
+    } else {
+      const task = this.taskRepository.create({
+        title: createTaskDto.title,
+        description: createTaskDto.description ?? undefined,
+        frequency: createTaskDto.frequency,
+        weekNumber: createTaskDto.weekNumber,
+        year: createTaskDto.year,
+        dayOfWeek: createTaskDto.dayOfWeek,
+        duration: createTaskDto.duration ?? null,
+        date: createTaskDto.date ?? formatDate(new Date()), // 👈 en string
+        weight: createTaskDto.weight ?? 1,
+        isTemplate: false,
+        group,
+        createdBy: user,
+      });
+
+      tasksToSave.push(task);
+    }
+
+    return this.taskRepository.save(tasksToSave);
   }
+
   async findAllByGroupAndWeek(
     groupId: string,
     weekNumber: number,
@@ -63,11 +104,23 @@ export class TasksService {
   }
 
   async findTemplate(groupId: string) {
-    return this.taskRepository.find({
+    const res = this.taskRepository.find({
       where: {
         group: { id: groupId },
         isTemplate: true,
       },
+    });
+    return res;
+  }
+
+  async findByDateAndIdGroup(day: string, groupId: string) {
+    return this.taskRepository.find({
+      where: {
+        group: { id: groupId },
+        date: day,
+        isTemplate: false,
+      },
+      relations: ['group', 'createdBy', 'assignments'],
       order: { dayOfWeek: 'ASC' },
     });
   }

@@ -30,8 +30,6 @@ export class GroupMemberService {
     return `This action removes a #${id} groupMember`;
   }
   async addMemberByEmail(email: string, groupId: string): Promise<GroupMember> {
-    console.log('idgroup ', groupId);
-    console.log('email', email);
     // 1️⃣ Vérifier utilisateur
     const group = await this.groupRepository.findOne({
       where: { id: groupId },
