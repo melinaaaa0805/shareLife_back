@@ -1,19 +1,6 @@
 version: '3.9' # optionnel, mais conseillé de mettre la version
 
 services:
-  db:
-    image: postgres:15
-    container_name: sharelife_db
-    restart: always
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: sharelife_db
-    ports:
-      - '5432:5432'
-    volumes:
-      - db_data:/var/lib/postgresql/data
-
   backend:
     build: .
     container_name: sharelife_backend
@@ -24,8 +11,6 @@ services:
       JWT_SECRET: supersecret
     env_file:
       - .env
-    depends_on:
-      - db
     volumes:
       - .:/app # monte ton code local dans le container
       - /app/node_modules # pour éviter de réécraser node_modules
