@@ -16,4 +16,7 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
   autoLoadEntities: true,
   entities: [User, Group, GroupMember, Task, TaskAssignment, ShoppingList],
   synchronize: true, // seulement pour dev
+  ssl: {
+    rejectUnauthorized: false, // permet de ne pas vérifier le certificat RDS auto-signé
+  },
 };
