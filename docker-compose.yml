@@ -21,12 +21,9 @@ services:
     ports:
       - '3000:3000'
     environment:
-      DB_HOST: db
-      DB_PORT: 5432
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_NAME: sharelife_db
       JWT_SECRET: supersecret
+    env_file:
+      - .env
     depends_on:
       - db
     volumes:
