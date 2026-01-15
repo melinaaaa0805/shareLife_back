@@ -1,0 +1,40 @@
+name: Backend CI/CD (EC2 + RDS)
+
+on:
+  push:
+    branches:
+      - deploiement
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # 1️⃣ Checkout le code
+      - uses: actions/checkout@v3
+
+      # 2️⃣ Node.js
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      # 3️⃣ Installer les dépendances et build
+      - run: npm install
+      - run: npm run build
+
+      # 4️⃣ Lancer les tests
+      - run: npm test
+
+      # 5️⃣ Déploiement sur EC2 via SSH
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v0.1.9
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            cd /home/ec2-user/shareLife_back
+            git pull origin main
+            npm install
+            npm run build
+            pm2 restart sharelife-backend || pm2 start dist/main.js --name sharelife-backend

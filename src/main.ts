@@ -5,10 +5,8 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors({
     origin: [
-      'http://localhost:19006',
-      'http://localhost:3000',
-      'http://localhost:8081',
-      'http://localhost:5173',
+      'https://sharelife-frontend-1064055634142.europe-west1.run.app',
+      'http://localhost:8081', // pour dev local
     ],
     credentials: true,
   });
