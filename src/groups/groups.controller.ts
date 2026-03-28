@@ -11,6 +11,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { GroupMode } from './entities/group.entity';
 import { GroupsService } from './groups.service';
 import { Request } from 'express';
 import { CreateGroupDto } from './dto/create-group.dto';
@@ -72,5 +73,26 @@ export class GroupsController {
   @Delete(':id/members/:userId')
   removeMember(@Param('id') groupId: string, @Param('userId') userId: string) {
     return this.groupsService.removeMember(groupId, userId);
+  }
+
+  @Patch(':id/mode')
+  setMode(
+    @Param('id') groupId: string,
+    @Body('mode') mode: GroupMode,
+  ) {
+    return this.groupsService.setMode(groupId, mode);
+  }
+
+  @Post(':id/elect-admin')
+  electWeeklyAdmin(
+    @Param('id') groupId: string,
+    @Body('winnerId') winnerId: string,
+  ) {
+    return this.groupsService.electWeeklyAdmin(groupId, winnerId);
+  }
+
+  @Get(':id/weekly-admin')
+  getWeeklyAdmin(@Param('id') groupId: string) {
+    return this.groupsService.getWeeklyAdmin(groupId);
   }
 }

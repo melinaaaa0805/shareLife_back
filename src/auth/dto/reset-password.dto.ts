@@ -1,9 +1,14 @@
-import { IsEmail, IsString, MinLength, MaxLength, Matches } from 'class-validator';
+import { IsEmail, IsString, Matches, MaxLength, MinLength } from 'class-validator';
 
-export class RegisterUserDto {
+export class ResetPasswordDto {
   @IsEmail({}, { message: 'Adresse email invalide' })
   @MaxLength(255)
   email: string;
+
+  @IsString()
+  @MinLength(6)
+  @MaxLength(6)
+  code: string;
 
   @IsString()
   @MinLength(8, { message: 'Le mot de passe doit contenir au moins 8 caractères' })
@@ -11,10 +16,5 @@ export class RegisterUserDto {
   @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
     message: 'Le mot de passe doit contenir une majuscule, une minuscule et un chiffre',
   })
-  password: string;
-
-  @IsString()
-  @MinLength(2, { message: 'Le prénom doit contenir au moins 2 caractères' })
-  @MaxLength(50)
-  firstName: string;
+  newPassword: string;
 }

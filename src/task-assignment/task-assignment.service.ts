@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -8,6 +9,16 @@ import { TaskAssignment } from './entities/task-assignment.entity';
 import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import { Task } from '../tasks/entities/task.entity';
+import { Group } from '../groups/entities/group.entity';
+
+function getISOWeekAndYear(date: Date): { week: number; year: number } {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+  const yearStart = new Date(d.getFullYear(), 0, 1);
+  const week = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+  return { week, year: d.getFullYear() };
+}
 @Injectable()
 export class TaskAssignmentService {
   constructor(
@@ -17,6 +28,8 @@ export class TaskAssignmentService {
     private readonly userRepo: Repository<User>,
     @InjectRepository(Task)
     private taskRepo: Repository<Task>,
+    @InjectRepository(Group)
+    private groupRepo: Repository<Group>,
   ) {}
 
   async assignTaskToMe(taskId: string, user: User): Promise<TaskAssignment> {
@@ -67,22 +80,40 @@ export class TaskAssignmentService {
       relations: ['assignments', 'group'],
     });
 
-    console.log('assigments test : ', tasks);
-
     return tasks;
   }
 
   async create(id: string, user: User): Promise<TaskAssignment> {
     const task = await this.taskRepo.findOne({
       where: { id: id },
-      relations: ['taskAssignment'],
+      relations: ['assignments', 'group'],
     });
 
     if (!task) {
       throw new NotFoundException('Tâche non trouvée');
     }
-    if (task.assignments) {
+    if (task.assignments && task.assignments.length > 0) {
       throw new BadRequestException('La tâche est déjà assignée');
+    }
+
+    // Vérification du mode FUNNY : seul l'admin de la semaine peut s'assigner
+    if (task.group) {
+      const group = await this.groupRepo.findOne({
+        where: { id: task.group.id },
+        relations: ['weeklyAdmin'],
+      });
+      if (group?.mode === 'FUNNY') {
+        const { week, year } = getISOWeekAndYear(new Date());
+        const isAdmin =
+          group.weeklyAdmin?.id === user.id &&
+          group.weeklyAdminWeek === week &&
+          group.weeklyAdminYear === year;
+        if (!isAdmin) {
+          throw new ForbiddenException(
+            'Seul le chef de la semaine peut attribuer des tâches en mode Drôle',
+          );
+        }
+      }
     }
 
     const assignment = this.assignmentRepo.create({
