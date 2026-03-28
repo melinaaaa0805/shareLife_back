@@ -12,6 +12,6 @@ export class GroupResponseDto {
     id: string;
     email: string;
     firstName: string;
-  };
+  } | null;
   members: GroupMemberResponseDto[];
 }

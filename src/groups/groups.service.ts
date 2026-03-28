@@ -1,7 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Group } from './entities/group.entity';
+import { Group, GroupMode } from './entities/group.entity';
 import { User } from '../users/entities/user.entity';
 import { GroupMember } from '../group-member/entities/group-member.entity';
 import { CreateGroupDto } from './dto/create-group.dto';
@@ -10,6 +14,14 @@ import { AddMemberDto } from './dto/add-member.dto';
 import { GroupResponseDto } from './dto/group-response.dto';
 import { defaultTasks } from '../tasks/tasks.seeds';
 import { Task } from '../tasks/entities/task.entity';
+function getISOWeekAndYear(date: Date): { week: number; year: number } {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+  const yearStart = new Date(d.getFullYear(), 0, 1);
+  const week = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+  return { week, year: d.getFullYear() };
+}
 
 @Injectable()
 export class GroupsService {
@@ -115,7 +127,13 @@ export class GroupsService {
           id: group.id,
           name: group.name,
           createdAt: group.createdAt,
-          owner: group.owner,
+          owner: group.owner
+            ? {
+                id: group.owner.id,
+                email: group.owner.email,
+                firstName: group.owner.firstName,
+              }
+            : null,
           members: members.map((m: GroupMember) => ({
             id: m.user.id,
             email: m.user.email,
@@ -131,18 +149,32 @@ export class GroupsService {
   async getGroupById(groupId: string) {
     const group = await this.groupRepository.findOne({
       where: { id: groupId },
-      relations: ['owner', 'members', 'members.user', 'task'],
+      relations: ['owner', 'members', 'members.user', 'task', 'weeklyAdmin'],
     });
 
     if (!group) {
       throw new NotFoundException('Groupe non trouvé');
     }
 
-    // 🔄 mapping vers DTO frontend
+    const now = new Date();
+    const { week: currentWeek, year: currentYear } = getISOWeekAndYear(now);
+    const isAdminForThisWeek =
+      group.weeklyAdminWeek === currentWeek &&
+      group.weeklyAdminYear === currentYear;
+
     return {
       id: group.id,
       name: group.name,
       createdAt: group.createdAt,
+      mode: group.mode,
+      weeklyAdmin:
+        group.weeklyAdmin && isAdminForThisWeek
+          ? {
+              id: group.weeklyAdmin.id,
+              email: group.weeklyAdmin.email,
+              firstName: group.weeklyAdmin.firstName,
+            }
+          : null,
       owner: {
         id: group.owner.id,
         email: group.owner.email,
@@ -153,6 +185,78 @@ export class GroupsService {
         email: m.user.email,
         firstName: m.user.firstName,
       })),
+    };
+  }
+
+  async setMode(groupId: string, mode: GroupMode): Promise<void> {
+    const group = await this.groupRepository.findOne({
+      where: { id: groupId },
+    });
+    if (!group) throw new NotFoundException('Groupe non trouvé');
+    group.mode = mode;
+    await this.groupRepository.save(group);
+  }
+
+  async electWeeklyAdmin(
+    groupId: string,
+    winnerId: string,
+  ): Promise<{ admin: { id: string; firstName: string; email: string } }> {
+    const group = await this.groupRepository.findOne({
+      where: { id: groupId },
+      relations: ['members', 'members.user', 'owner'],
+    });
+    if (!group) throw new NotFoundException('Groupe non trouvé');
+    if (group.mode !== 'FUNNY')
+      throw new ForbiddenException("Le groupe n'est pas en mode Drôle");
+
+    // Vérifier que le winner fait partie du groupe
+    const allMembers = [
+      group.owner,
+      ...group.members.map((m) => m.user),
+    ];
+    const winner = allMembers.find((u) => u.id === winnerId);
+    if (!winner) throw new NotFoundException('Membre non trouvé dans le groupe');
+
+    const now = new Date();
+    const { week, year } = getISOWeekAndYear(now);
+    group.weeklyAdmin = winner;
+    group.weeklyAdminWeek = week;
+    group.weeklyAdminYear = year;
+    await this.groupRepository.save(group);
+
+    return {
+      admin: {
+        id: winner.id,
+        firstName: winner.firstName,
+        email: winner.email,
+      },
+    };
+  }
+
+  async getWeeklyAdmin(groupId: string) {
+    const group = await this.groupRepository.findOne({
+      where: { id: groupId },
+      relations: ['weeklyAdmin'],
+    });
+    if (!group) throw new NotFoundException('Groupe non trouvé');
+
+    const now = new Date();
+    const { week: currentWeek, year: currentYear } = getISOWeekAndYear(now);
+
+    const isValid =
+      group.weeklyAdmin &&
+      group.weeklyAdminWeek === currentWeek &&
+      group.weeklyAdminYear === currentYear;
+
+    return {
+      mode: group.mode,
+      weeklyAdmin: isValid
+        ? {
+            id: group.weeklyAdmin!.id,
+            firstName: group.weeklyAdmin!.firstName,
+            email: group.weeklyAdmin!.email,
+          }
+        : null,
     };
   }
 }

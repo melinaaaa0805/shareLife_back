@@ -17,6 +17,15 @@ export class User {
   @Column({ nullable: true })
   lastName: string;
 
-  @Column({ default: 'MEMBER' }) // tu peux mettre MEMBER par défaut
+  @Column({ default: 'MEMBER' })
   role: string;
+
+  @Column({ nullable: true, type: 'varchar' })
+  avatarColor: string | null;
+
+  @Column({ nullable: true, type: 'varchar' })
+  resetToken: string | null;
+
+  @Column({ nullable: true, type: 'timestamp' })
+  resetTokenExpiry: Date | null;
 }

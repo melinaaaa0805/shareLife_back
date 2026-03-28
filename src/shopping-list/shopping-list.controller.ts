@@ -6,12 +6,16 @@ import {
   Param,
   Put,
   Delete,
+  UseGuards,
+  NotFoundException,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { ShoppingListService } from './shopping-list.service';
 import { Group } from '../groups/entities/group.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('shopping-lists')
 export class ShoppingListController {
   constructor(
@@ -27,7 +31,7 @@ export class ShoppingListController {
     body: { weekNumber: number; items: { name: string; quantity: string }[] },
   ) {
     const group = await this.groupRepo.findOne({ where: { id: groupId } });
-    if (!group) return { error: 'Group not found' };
+    if (!group) throw new NotFoundException('Groupe non trouvé');
     return this.shoppingListService.create(group, body.weekNumber, body.items);
   }
 
