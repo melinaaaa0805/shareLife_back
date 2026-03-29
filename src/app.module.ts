@@ -11,6 +11,9 @@ import { TasksModule } from './tasks/tasks.module';
 import { TaskAssignmentModule } from './task-assignment/task-assignment.module';
 import { GroupMemberModule } from './group-member/group-member.module';
 import { ShoppingListModule } from './shopping-list/shopping-list.module';
+import { MealsModule } from './meals/meals.module';
+import { MealVotesModule } from './meal-votes/meal-votes.module';
+import { GroupInvitationsModule } from './group-invitations/group-invitations.module';
 
 @Module({
   imports: [
@@ -23,6 +26,9 @@ import { ShoppingListModule } from './shopping-list/shopping-list.module';
     TaskAssignmentModule,
     GroupMemberModule,
     ShoppingListModule,
+    MealsModule,
+    MealVotesModule,
+    GroupInvitationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

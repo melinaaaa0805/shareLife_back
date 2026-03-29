@@ -28,11 +28,12 @@ export class ShoppingListController {
   async create(
     @Param('groupId') groupId: string,
     @Body()
-    body: { weekNumber: number; items: { name: string; quantity: string }[] },
+    body: { weekNumber: number; year?: number; items: { name: string; quantity: string }[] },
   ) {
     const group = await this.groupRepo.findOne({ where: { id: groupId } });
     if (!group) throw new NotFoundException('Groupe non trouvé');
-    return this.shoppingListService.create(group, body.weekNumber, body.items);
+    const year = body.year ?? new Date().getFullYear();
+    return this.shoppingListService.create(group, body.weekNumber, year, body.items);
   }
 
   @Get(':groupId')

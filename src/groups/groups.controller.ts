@@ -95,4 +95,21 @@ export class GroupsController {
   getWeeklyAdmin(@Param('id') groupId: string) {
     return this.groupsService.getWeeklyAdmin(groupId);
   }
+
+  @Patch(':id/members/:userId/profile')
+  setMemberProfile(
+    @Param('id') groupId: string,
+    @Param('userId') userId: string,
+    @Body('profile') profile: 'ADULT' | 'CHILD',
+  ) {
+    return this.groupsService.setMemberProfile(groupId, userId, profile);
+  }
+
+  @Post(':id/smart-assign')
+  smartAssign(
+    @Param('id') groupId: string,
+    @Body() body: { weekNumber: number; year: number },
+  ) {
+    return this.groupsService.smartAssign(groupId, body.weekNumber, body.year);
+  }
 }

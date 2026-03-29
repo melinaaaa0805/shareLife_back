@@ -14,7 +14,10 @@ export class ShoppingList {
   id: string;
 
   @Column()
-  weekNumber: number; // numéro de la semaine
+  weekNumber: number;
+
+  @Column({ default: 2025 })
+  year: number;
 
   @Column('json', { default: [] })
   items: { name: string; quantity: string }[]; // exemple : [{name: 'Oeufs', quantity: '12'}]

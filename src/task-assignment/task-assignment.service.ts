@@ -72,15 +72,14 @@ export class TaskAssignmentService {
   }
 
   async getUnassignedTasks(groupId: string) {
-    const tasks = await this.taskRepo.find({
-      where: {
-        assignments: [], // pas de relation assignée
-        group: { id: groupId },
-      },
-      relations: ['assignments', 'group'],
-    });
-
-    return tasks;
+    return this.taskRepo
+      .createQueryBuilder('task')
+      .leftJoin('task.assignments', 'assignment')
+      .leftJoin('task.group', 'group')
+      .where('group.id = :groupId', { groupId })
+      .andWhere('task.isTemplate = false')
+      .andWhere('assignment.id IS NULL')
+      .getMany();
   }
 
   async create(id: string, user: User): Promise<TaskAssignment> {
@@ -122,6 +121,60 @@ export class TaskAssignmentService {
       status: 'PENDING',
     });
 
+    return this.assignmentRepo.save(assignment);
+  }
+
+  async assignToUser(taskId: string, targetUserId: string, requesterId: string): Promise<TaskAssignment> {
+    const task = await this.taskRepo.findOne({
+      where: { id: taskId },
+      relations: ['assignments', 'group'],
+    });
+    if (!task) throw new NotFoundException('Tâche non trouvée');
+
+    const isAdultChild = task.taskType === 'ADULT_CHILD';
+    const maxAssignments = isAdultChild ? 2 : 1;
+    if (task.assignments && task.assignments.length >= maxAssignments) {
+      throw new BadRequestException('La tâche a déjà atteint le nombre maximum d\'assignations');
+    }
+    // Empêcher le même utilisateur d'être assigné deux fois
+    if (task.assignments?.some((a) => (a.user as any)?.id === targetUserId)) {
+      throw new BadRequestException('Cet utilisateur est déjà assigné à cette tâche');
+    }
+
+    // Vérifier mode FUNNY : seul l'admin peut assigner
+    if (task.group) {
+      const group = await this.groupRepo.findOne({
+        where: { id: task.group.id },
+        relations: ['weeklyAdmin'],
+      });
+      if (group?.mode === 'FUNNY') {
+        const { week, year } = getISOWeekAndYear(new Date());
+        const isAdmin =
+          group.weeklyAdmin?.id === requesterId &&
+          group.weeklyAdminWeek === week &&
+          group.weeklyAdminYear === year;
+        if (!isAdmin) {
+          throw new ForbiddenException('Seul le chef de la semaine peut attribuer des tâches');
+        }
+      }
+    }
+
+    const targetUser = await this.userRepo.findOne({ where: { id: targetUserId } });
+    if (!targetUser) throw new NotFoundException('Utilisateur cible non trouvé');
+
+    const assignment = this.assignmentRepo.create({ task, user: targetUser, status: 'PENDING' });
+    return this.assignmentRepo.save(assignment);
+  }
+
+  async markDone(taskId: string, userId: string): Promise<TaskAssignment> {
+    const assignment = await this.assignmentRepo.findOne({
+      where: { task: { id: taskId }, user: { id: userId } },
+    });
+    if (!assignment) {
+      throw new NotFoundException('Assignation non trouvée');
+    }
+    assignment.status = 'DONE';
+    assignment.completedAt = new Date();
     return this.assignmentRepo.save(assignment);
   }
 

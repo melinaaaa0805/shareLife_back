@@ -55,16 +55,24 @@ export class GroupMemberService {
    * @returns liste des utilisateurs
    */
   async getUsersByGroup(groupId: string): Promise<User[]> {
+    const group = await this.groupRepository.findOne({
+      where: { id: groupId },
+      relations: ['owner'],
+    });
+    if (!group) throw new NotFoundException('Groupe non trouvé');
+
     const members = await this.groupMemberRepository.find({
       where: { group: { id: groupId } },
       relations: ['user'],
     });
 
-    if (!members.length) {
-      throw new NotFoundException('Aucun membre trouvé pour ce groupe');
+    const users = members.map((m) => m.user);
+
+    // Inclure le créateur s'il n'est pas déjà dans la liste
+    if (group.owner && !users.find((u) => u.id === group.owner.id)) {
+      users.unshift(group.owner);
     }
 
-    // Retourne uniquement les utilisateurs
-    return members.map((m) => m.user);
+    return users;
   }
 }
