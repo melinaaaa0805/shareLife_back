@@ -24,6 +24,34 @@ export const defaultTasks: Partial<Task>[] = [
     weight: 1,
     duration: 5,
   },
+  {
+    title: 'Aérer les pièces',
+    description: 'Ouvrir les fenêtres 10 min pour renouveler l\'air',
+    frequency: 'DAILY',
+    weight: 1,
+    duration: 5,
+  },
+  {
+    title: 'Vider le lave-vaisselle',
+    description: 'Sortir et ranger la vaisselle propre',
+    frequency: 'DAILY',
+    weight: 1,
+    duration: 10,
+  },
+  {
+    title: 'Ramasser et ranger',
+    description: 'Ramasser les affaires traînantes dans les pièces communes',
+    frequency: 'DAILY',
+    weight: 2,
+    duration: 10,
+  },
+  {
+    title: 'Trier le courrier',
+    description: 'Ouvrir, trier et archiver le courrier du jour',
+    frequency: 'DAILY',
+    weight: 1,
+    duration: 5,
+  },
 
   // ── Lundi ──────────────────────────────────────────────────────────────────
   {
@@ -42,6 +70,14 @@ export const defaultTasks: Partial<Task>[] = [
     weight: 2,
     duration: 15,
   },
+  {
+    title: 'Plier et ranger le linge',
+    description: 'Plier le linge sec et le ranger dans les armoires',
+    frequency: 'WEEKLY',
+    dayOfWeek: 0,
+    weight: 2,
+    duration: 20,
+  },
 
   // ── Mardi ──────────────────────────────────────────────────────────────────
   {
@@ -51,6 +87,14 @@ export const defaultTasks: Partial<Task>[] = [
     dayOfWeek: 1,
     weight: 3,
     duration: 30,
+  },
+  {
+    title: 'Dépoussiérer les meubles',
+    description: 'Chiffon humide sur meubles, étagères et objets',
+    frequency: 'WEEKLY',
+    dayOfWeek: 1,
+    weight: 2,
+    duration: 20,
   },
   {
     title: 'Nettoyer les toilettes',
@@ -78,6 +122,14 @@ export const defaultTasks: Partial<Task>[] = [
     weight: 2,
     duration: 20,
   },
+  {
+    title: 'Nettoyer le réfrigérateur',
+    description: 'Vérifier les dates, nettoyer les étagères et tiroirs',
+    frequency: 'WEEKLY',
+    dayOfWeek: 2,
+    weight: 2,
+    duration: 15,
+  },
 
   // ── Jeudi ──────────────────────────────────────────────────────────────────
   {
@@ -87,6 +139,14 @@ export const defaultTasks: Partial<Task>[] = [
     dayOfWeek: 3,
     weight: 3,
     duration: 25,
+  },
+  {
+    title: 'Nettoyer les vitres et miroirs',
+    description: 'Vitres intérieures, miroirs et surfaces vitrées',
+    frequency: 'WEEKLY',
+    dayOfWeek: 3,
+    weight: 2,
+    duration: 20,
   },
   {
     title: 'Changer les serviettes et draps',
@@ -104,6 +164,14 @@ export const defaultTasks: Partial<Task>[] = [
     frequency: 'WEEKLY',
     dayOfWeek: 4,
     weight: 2,
+    duration: 10,
+  },
+  {
+    title: 'Trier et recycler',
+    description: 'Trier papiers, plastiques, verre et déchets',
+    frequency: 'WEEKLY',
+    dayOfWeek: 4,
+    weight: 1,
     duration: 10,
   },
   {
@@ -140,8 +208,24 @@ export const defaultTasks: Partial<Task>[] = [
     weight: 2,
     duration: 15,
   },
+  {
+    title: 'Entretenir extérieur / balcon',
+    description: 'Balayer terrasse, arroser plantes, désherber',
+    frequency: 'WEEKLY',
+    dayOfWeek: 5,
+    weight: 3,
+    duration: 30,
+  },
 
   // ── Dimanche ───────────────────────────────────────────────────────────────
+  {
+    title: 'Planifier les repas',
+    description: 'Choisir les repas de la semaine et préparer la liste de courses',
+    frequency: 'WEEKLY',
+    dayOfWeek: 6,
+    weight: 2,
+    duration: 15,
+  },
   {
     title: 'Ranger et désencombrer',
     description: 'Ranger jouets, affaires traînantes, vider les sacs',
@@ -157,5 +241,13 @@ export const defaultTasks: Partial<Task>[] = [
     dayOfWeek: 6,
     weight: 2,
     duration: 20,
+  },
+  {
+    title: 'Nettoyage de la cave / garage',
+    description: 'Désencombrer, ranger et nettoyer cave ou garage',
+    frequency: 'WEEKLY',
+    dayOfWeek: 6,
+    weight: 4,
+    duration: 60,
   },
 ];

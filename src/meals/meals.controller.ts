@@ -1,18 +1,18 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Delete,
-  Patch,
   Body,
+  Controller,
+  Delete,
+  Get,
   Param,
+  Patch,
+  Post,
   Query,
-  UseGuards,
   Request,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { MealsService } from './meals.service';
 import { MealIngredient } from './entities/weekly-meal.entity';
+import { MealsService } from './meals.service';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('meals')
@@ -28,6 +28,19 @@ export class MealsController {
   @Get('catalog')
   catalog(@Query('q') q: string) {
     return this.mealsService.getCatalog(q);
+  }
+
+  @Post(':mealId/add-to-shopping')
+  addToShoppingList(
+    @Param('mealId') mealId: string,
+    @Body() body: { groupId: string; weekNumber: number; year: number },
+  ) {
+    return this.mealsService.addIngredientsToShoppingList(
+      mealId,
+      body.groupId,
+      body.weekNumber,
+      body.year,
+    );
   }
 
   @Get(':groupId/:year/:week')
@@ -61,7 +74,11 @@ export class MealsController {
   update(
     @Param('id') id: string,
     @Body()
-    body: { name?: string; description?: string; ingredients?: MealIngredient[] },
+    body: {
+      name?: string;
+      description?: string;
+      ingredients?: MealIngredient[];
+    },
   ) {
     return this.mealsService.update(id, body);
   }
@@ -69,17 +86,5 @@ export class MealsController {
   @Delete(':id')
   delete(@Param('id') id: string) {
     return this.mealsService.delete(id);
-  }
-
-  @Post(':mealId/add-to-shopping')
-  addToShoppingList(
-    @Param('mealId') mealId: string,
-    @Body() body: { groupId: string; weekNumber: number },
-  ) {
-    return this.mealsService.addIngredientsToShoppingList(
-      mealId,
-      body.groupId,
-      body.weekNumber,
-    );
   }
 }

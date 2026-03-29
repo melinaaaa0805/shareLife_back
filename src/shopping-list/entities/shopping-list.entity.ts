@@ -16,7 +16,7 @@ export class ShoppingList {
   @Column()
   weekNumber: number;
 
-  @Column({ default: 2025 })
+  @Column({ default: () => `EXTRACT(YEAR FROM NOW())` })
   year: number;
 
   @Column('json', { default: [] })
