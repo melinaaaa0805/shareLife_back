@@ -7,11 +7,12 @@ import { GroupMember } from '../group-member/entities/group-member.entity';
 import { User } from '../users/entities/user.entity';
 import { UsersModule } from '../users/users.module';
 import { Task } from '../tasks/entities/task.entity';
+import { TaskAssignment } from '../task-assignment/entities/task-assignment.entity';
 import { ShoppingList } from '../shopping-list/entities/shopping-list.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Group, GroupMember, User, Task, ShoppingList]),
+    TypeOrmModule.forFeature([Group, GroupMember, User, Task, TaskAssignment, ShoppingList]),
     UsersModule, // ← IMPORTANT
   ],
   controllers: [GroupsController],

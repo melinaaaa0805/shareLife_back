@@ -1,4 +1,4 @@
-import { Controller, Get, Body, Param, UseGuards, Post } from '@nestjs/common';
+import { Controller, Get, Body, Param, UseGuards, Post, Patch } from '@nestjs/common';
 import { TaskAssignmentService } from './task-assignment.service';
 import { AuthGuard } from '@nestjs/passport';
 import { CurrentUser } from '../help';
@@ -18,6 +18,23 @@ export class TaskAssignmentController {
   ): Promise<TaskAssignment> {
     return this.taskAssignmentService.create(idTask, user);
   }
+  @Post(':taskId/assign-to/:userId')
+  assignTo(
+    @Param('taskId') taskId: string,
+    @Param('userId') targetUserId: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.taskAssignmentService.assignToUser(taskId, targetUserId, (user as any).id);
+  }
+
+  @Patch(':taskId/done')
+  markDone(
+    @Param('taskId') taskId: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.taskAssignmentService.markDone(taskId, (user as any).id);
+  }
+
   @Get('/users/:id')
   findByUser(@Param('id') id: string) {
     return this.taskAssignmentService.findByUser(id);

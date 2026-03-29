@@ -15,11 +15,13 @@ export class ShoppingListService {
   create(
     group: Group,
     weekNumber: number,
+    year: number,
     items: { name: string; quantity: string }[],
   ) {
     const shoppingList = this.shoppingListRepo.create({
       group,
       weekNumber,
+      year,
       items,
     });
     return this.shoppingListRepo.save(shoppingList);

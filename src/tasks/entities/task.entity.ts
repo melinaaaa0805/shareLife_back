@@ -50,5 +50,8 @@ export class Task {
   date: string | null;
 
   @Column({ default: false })
-  isTemplate: boolean; // <-- nouveau champ
+  isTemplate: boolean;
+
+  @Column({ type: 'varchar', default: 'FAMILY' })
+  taskType: 'FAMILY' | 'ADULT' | 'ADULT_CHILD';
 }

@@ -2,20 +2,23 @@ import {
   IsNotEmpty,
   IsString,
   IsNumber,
-  IsUUID,
-  IsBoolean,
+  IsOptional,
+  IsIn,
 } from 'class-validator';
 import { Frequency } from '../enums/frequency.enum';
+
 export class CreateTaskDto {
   @IsString()
   @IsNotEmpty()
   title: string;
 
+  @IsOptional()
   @IsString()
   description?: string;
 
   @IsString()
-  frequency: Frequency.ONCE | Frequency.DAILY | Frequency.WEEKLY;
+  @IsIn([Frequency.ONCE, Frequency.DAILY, Frequency.WEEKLY])
+  frequency: Frequency;
 
   @IsNumber()
   weekNumber: number;
@@ -26,21 +29,20 @@ export class CreateTaskDto {
   @IsNumber()
   dayOfWeek: number;
 
+  @IsOptional()
   @IsNumber()
   duration?: number;
 
+  @IsOptional()
   @IsString()
   date?: string;
 
+  @IsOptional()
   @IsNumber()
   weight?: number;
 
-  @IsUUID()
-  groupId: string;
-
-  @IsUUID()
-  createdById: string;
-
-  @IsBoolean()
-  isTemplate: boolean;
+  @IsOptional()
+  @IsString()
+  @IsIn(['FAMILY', 'ADULT', 'ADULT_CHILD'])
+  taskType?: 'FAMILY' | 'ADULT' | 'ADULT_CHILD';
 }

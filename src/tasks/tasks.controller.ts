@@ -20,6 +20,15 @@ import { User } from '../users/entities/user.entity';
 @Controller('tasks')
 export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
+  @Post('group/:groupId/apply-template')
+  applyTemplate(
+    @Param('groupId') groupId: string,
+    @Body() body: { weekNumber: number; year: number },
+    @CurrentUser() user: User,
+  ) {
+    return this.tasksService.applyWeekTemplate(groupId, body.weekNumber, body.year, user);
+  }
+
   @Post('group/:groupId')
   create(
     @Param('groupId') groupId: string,
@@ -45,12 +54,12 @@ export class TasksController {
   async getTasksTemplate(@Param('groupId') groupId: string) {
     return this.tasksService.findTemplate(groupId);
   }
-  @Get(':groupId/:date')
+  @Get(':date/:groupId')
   async getTasksForDay(
-    @Param('groupId') groupId: string,
     @Param('date') date: string,
+    @Param('groupId') groupId: string,
   ) {
-    return this.tasksService.findByDateAndIdGroup(groupId, date);
+    return this.tasksService.findByDateAndIdGroup(date, groupId);
   }
   @Get('/week')
   async getWeekTasks(
@@ -74,8 +83,17 @@ export class TasksController {
     return this.tasksService.update(+id);
   }
 
+  @Delete('week/:groupId/:year/:weekNumber')
+  deleteWeek(
+    @Param('groupId') groupId: string,
+    @Param('year') year: string,
+    @Param('weekNumber') weekNumber: string,
+  ) {
+    return this.tasksService.deleteWeek(groupId, Number(weekNumber), Number(year));
+  }
+
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.tasksService.remove(+id);
+    return this.tasksService.remove(id);
   }
 }

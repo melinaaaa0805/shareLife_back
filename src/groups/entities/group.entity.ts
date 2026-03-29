@@ -12,7 +12,7 @@ import { GroupMember } from '../../group-member/entities/group-member.entity';
 import { ShoppingList } from '../../shopping-list/entities/shopping-list.entity';
 import { Task } from '../../tasks/entities/task.entity';
 
-export type GroupMode = 'FREE' | 'FUNNY';
+export type GroupMode = 'FREE' | 'FUNNY' | 'SMART';
 
 @Entity()
 export class Group {
