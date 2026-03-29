@@ -77,6 +77,7 @@ export class MealsService {
     mealId: string,
     groupId: string,
     weekNumber: number,
+    year: number,
   ) {
     const meal = await this.mealRepo.findOne({ where: { id: mealId } });
     if (!meal) throw new NotFoundException('Repas non trouvé');
@@ -84,8 +85,15 @@ export class MealsService {
     if (!group) throw new NotFoundException('Groupe non trouvé');
 
     let list = await this.shoppingListRepo.findOne({
-      where: { group: { id: groupId }, weekNumber },
+      where: { group: { id: groupId }, weekNumber, year },
     });
+    // Fallback pour les listes créées avec l'ancienne valeur par défaut (2025)
+    if (!list) {
+      list = await this.shoppingListRepo.findOne({
+        where: { group: { id: groupId }, weekNumber },
+      });
+      if (list) list.year = year;
+    }
 
     const newItems = meal.ingredients.map((ing) => ({
       name: ing.unit ? `${ing.name} (${ing.unit})` : ing.name,
@@ -103,6 +111,7 @@ export class MealsService {
       const newList = this.shoppingListRepo.create({
         group,
         weekNumber,
+        year,
         items: newItems,
       });
       return this.shoppingListRepo.save(newList);
