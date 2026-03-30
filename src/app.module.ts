@@ -14,6 +14,7 @@ import { ShoppingListModule } from './shopping-list/shopping-list.module';
 import { MealsModule } from './meals/meals.module';
 import { MealVotesModule } from './meal-votes/meal-votes.module';
 import { GroupInvitationsModule } from './group-invitations/group-invitations.module';
+import { FinanceModule } from './finance/finance.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { GroupInvitationsModule } from './group-invitations/group-invitations.mo
     MealsModule,
     MealVotesModule,
     GroupInvitationsModule,
+    FinanceModule,
   ],
   controllers: [AppController],
   providers: [AppService],
