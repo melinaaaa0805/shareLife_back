@@ -238,22 +238,6 @@ export class TasksService {
     });
   }
 
-  async findAll(filters?: { groupId?: string; date?: string }) {
-    const query = this.taskRepository
-      .createQueryBuilder('task')
-      .leftJoinAndSelect('task.group', 'group')
-      .leftJoinAndSelect('task.createdBy', 'createdBy');
-
-    if (filters?.groupId) {
-      query.andWhere('task.groupId = :groupId', { groupId: filters.groupId });
-    }
-    if (filters?.date) {
-      query.andWhere('DATE(task.date) = :date', { date: filters.date });
-    }
-
-    return query.orderBy('task.date', 'ASC').getMany();
-  }
-
   async findWeekTasks(
     groupId: string,
     week: number,
@@ -263,14 +247,6 @@ export class TasksService {
       where: { group: { id: groupId }, weekNumber: week, year },
       relations: ['group', 'createdBy'],
     });
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} task`;
-  }
-
-  update(id: number) {
-    return `This action updates a #${id} task`;
   }
 
   async deleteWeek(groupId: string, weekNumber: number, year: number): Promise<{ deleted: number }> {

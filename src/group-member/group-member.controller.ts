@@ -4,7 +4,6 @@ import {
   Post,
   Body,
   Param,
-  Delete,
   UseGuards,
 } from '@nestjs/common';
 import { GroupMemberService } from './group-member.service';
@@ -25,18 +24,8 @@ export class GroupMemberController {
     return this.groupMemberService.addMemberByEmail(email, groupId);
   }
 
-  @Get()
-  findAll() {
-    return this.groupMemberService.findAll();
-  }
-
   @Get(':groupId')
   async getUsers(@Param('groupId') groupId: string): Promise<User[]> {
     return this.groupMemberService.getUsersByGroup(groupId);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.groupMemberService.remove(+id);
   }
 }

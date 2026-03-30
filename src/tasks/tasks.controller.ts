@@ -3,7 +3,6 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   UseGuards,
@@ -20,6 +19,7 @@ import { User } from '../users/entities/user.entity';
 @Controller('tasks')
 export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
+
   @Post('group/:groupId/apply-template')
   applyTemplate(
     @Param('groupId') groupId: string,
@@ -38,30 +38,8 @@ export class TasksController {
     return this.tasksService.create(createTaskDto, groupId, user);
   }
 
-  @Get('week/:groupId/:year/:weekNumber')
-  async getTasksByWeek(
-    @Param('groupId') groupId: string,
-    @Param('year') year: string,
-    @Param('weekNumber') weekNumber: string,
-  ) {
-    return this.tasksService.findAllByGroupAndWeek(
-      groupId,
-      Number(weekNumber),
-      Number(year),
-    );
-  }
-  @Get(':groupId/template')
-  async getTasksTemplate(@Param('groupId') groupId: string) {
-    return this.tasksService.findTemplate(groupId);
-  }
-  @Get(':date/:groupId')
-  async getTasksForDay(
-    @Param('date') date: string,
-    @Param('groupId') groupId: string,
-  ) {
-    return this.tasksService.findByDateAndIdGroup(date, groupId);
-  }
-  @Get('/week')
+  // Route query-based AVANT les routes paramétrées pour éviter les conflits
+  @Get('by-week')
   async getWeekTasks(
     @Query('groupId') groupId: string,
     @Query('week') week: number,
@@ -73,14 +51,18 @@ export class TasksController {
     return this.tasksService.findWeekTasks(groupId, week, year);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.tasksService.findOne(+id);
+  @Get('week/:groupId/:year/:weekNumber')
+  async getTasksByWeek(
+    @Param('groupId') groupId: string,
+    @Param('year') year: string,
+    @Param('weekNumber') weekNumber: string,
+  ) {
+    return this.tasksService.findAllByGroupAndWeek(groupId, Number(weekNumber), Number(year));
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string) {
-    return this.tasksService.update(+id);
+  @Get(':groupId/template')
+  async getTasksTemplate(@Param('groupId') groupId: string) {
+    return this.tasksService.findTemplate(groupId);
   }
 
   @Delete('week/:groupId/:year/:weekNumber')
@@ -90,6 +72,14 @@ export class TasksController {
     @Param('weekNumber') weekNumber: string,
   ) {
     return this.tasksService.deleteWeek(groupId, Number(weekNumber), Number(year));
+  }
+
+  @Get(':date/:groupId')
+  async getTasksForDay(
+    @Param('date') date: string,
+    @Param('groupId') groupId: string,
+  ) {
+    return this.tasksService.findByDateAndIdGroup(date, groupId);
   }
 
   @Delete(':id')

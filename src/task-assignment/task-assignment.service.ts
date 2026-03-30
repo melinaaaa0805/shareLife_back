@@ -10,15 +10,7 @@ import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import { Task } from '../tasks/entities/task.entity';
 import { Group } from '../groups/entities/group.entity';
-
-function getISOWeekAndYear(date: Date): { week: number; year: number } {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  d.setDate(d.getDate() + 4 - (d.getDay() || 7));
-  const yearStart = new Date(d.getFullYear(), 0, 1);
-  const week = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
-  return { week, year: d.getFullYear() };
-}
+import { getISOWeekAndYear } from '../common/date.utils';
 @Injectable()
 export class TaskAssignmentService {
   constructor(
@@ -31,45 +23,6 @@ export class TaskAssignmentService {
     @InjectRepository(Group)
     private groupRepo: Repository<Group>,
   ) {}
-
-  async assignTaskToMe(taskId: string, user: User): Promise<TaskAssignment> {
-    // 1️⃣ Vérifier que la tâche existe
-    const task = await this.taskRepo.findOne({
-      where: { id: taskId },
-      relations: ['group'],
-    });
-
-    if (!task) {
-      throw new NotFoundException('Task not found');
-    }
-
-    // 2️⃣ Vérifier si un assignment existe déjà pour cette tâche
-    let assignment = await this.assignmentRepo.findOne({
-      where: { task: { id: task.id } },
-      relations: ['user'],
-    });
-
-    // 3️⃣ Si pas d'assignation, on la crée
-    if (!assignment) {
-      assignment = this.assignmentRepo.create({
-        task,
-        user,
-        status: 'PENDING',
-      });
-    }
-    // 4️⃣ Si assignation existe mais sans user, on l'assigne à l'utilisateur
-    else if (!assignment.user) {
-      assignment.user = user;
-      assignment.status = 'PENDING';
-    }
-    // 5️⃣ Si assignation existe déjà avec un user, on empêche la réassignation
-    else {
-      throw new NotFoundException('Task already assigned');
-    }
-
-    // 6️⃣ Sauvegarde
-    return this.assignmentRepo.save(assignment);
-  }
 
   async getUnassignedTasks(groupId: string) {
     return this.taskRepo

@@ -5,6 +5,12 @@ import { GroupMember } from '../group-member/entities/group-member.entity';
 import { Task } from '../tasks/entities/task.entity';
 import { TaskAssignment } from '../task-assignment/entities/task-assignment.entity';
 import { ShoppingList } from '../shopping-list/entities/shopping-list.entity';
+import { WeeklyMeal } from '../meals/entities/weekly-meal.entity';
+import { MealVote } from '../meal-votes/entities/meal-vote.entity';
+import { GroupInvitation } from '../group-invitations/entities/group-invitation.entity';
+import { Expense } from '../finance/entities/expense.entity';
+import { ExpenseParticipant } from '../finance/entities/expense-participant.entity';
+import { Reimbursement } from '../finance/entities/reimbursement.entity';
 
 export const typeOrmConfig: TypeOrmModuleOptions = {
   type: 'postgres',
@@ -14,6 +20,6 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
   password: process.env.DB_PASSWORD || 'postgres',
   database: process.env.DB_NAME || 'sharelife_db',
   autoLoadEntities: true,
-  entities: [User, Group, GroupMember, Task, TaskAssignment, ShoppingList],
+  entities: [User, Group, GroupMember, Task, TaskAssignment, ShoppingList, WeeklyMeal, MealVote, GroupInvitation, Expense, ExpenseParticipant, Reimbursement],
   synchronize: true, // seulement pour dev
 };
