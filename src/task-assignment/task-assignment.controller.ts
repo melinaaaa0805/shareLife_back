@@ -1,4 +1,5 @@
 import { Controller, Get, Body, Param, UseGuards, Post, Patch } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { TaskAssignmentService } from './task-assignment.service';
 import { AuthGuard } from '@nestjs/passport';
 import { CurrentUser } from '../help';
@@ -6,6 +7,8 @@ import { TaskAssignment } from './entities/task-assignment.entity';
 import { User } from '../users/entities/user.entity';
 import { Task } from '../tasks/entities/task.entity';
 
+@ApiTags('Assignations')
+@ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))
 @Controller('task-assignment')
 export class TaskAssignmentController {

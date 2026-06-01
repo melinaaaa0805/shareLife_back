@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Body,
   Param,
   Delete,
@@ -9,12 +10,15 @@ import {
   Query,
   BadRequestException,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { CurrentUser } from '../help';
 import { User } from '../users/entities/user.entity';
 
+@ApiTags('Tâches')
+@ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))
 @Controller('tasks')
 export class TasksController {
@@ -80,6 +84,11 @@ export class TasksController {
     @Param('groupId') groupId: string,
   ) {
     return this.tasksService.findByDateAndIdGroup(date, groupId);
+  }
+
+  @Patch(':id')
+  patch(@Param('id') id: string, @Body() body: Partial<CreateTaskDto>) {
+    return this.tasksService.patch(id, body);
   }
 
   @Delete(':id')

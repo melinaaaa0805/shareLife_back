@@ -11,6 +11,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { GroupMode } from './entities/group.entity';
 import { GroupsService } from './groups.service';
 import { Request } from 'express';
@@ -22,6 +23,8 @@ import { UsersService } from '../users/users.service';
 import { User } from '../users/entities/user.entity';
 import { JwtUser } from '../auth/jwt-user.type';
 
+@ApiTags('Groupes')
+@ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))
 @Controller('groups')
 export class GroupsController {

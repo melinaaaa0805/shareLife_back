@@ -8,7 +8,7 @@ describe('TaskAssignmentController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [TaskAssignmentController],
-      providers: [TaskAssignmentService],
+      providers: [{ provide: TaskAssignmentService, useValue: {} }],
     }).compile();
 
     controller = module.get<TaskAssignmentController>(TaskAssignmentController);

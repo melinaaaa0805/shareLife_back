@@ -8,9 +8,12 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { MealVotesService } from './meal-votes.service';
 
+@ApiTags('Votes repas')
+@ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))
 @Controller('meal-votes')
 export class MealVotesController {

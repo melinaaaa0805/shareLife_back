@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -11,9 +12,11 @@ import { Reimbursement } from './entities/reimbursement.entity';
 import { Group } from '../groups/entities/group.entity';
 import { User } from '../users/entities/user.entity';
 import { CreateExpenseDto, ParticipantShareDto } from './dto/create-expense.dto';
+import { UpdateExpenseDto } from './dto/update-expense.dto';
 import { CreateReimbursementDto } from './dto/create-reimbursement.dto';
 import { BalanceResponse, DebtEdge, MemberBalance } from './dto/balance-response.dto';
 import { SplitMode } from './enums/split-mode.enum';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class FinanceService {
@@ -28,6 +31,7 @@ export class FinanceService {
     private readonly groupRepo: Repository<Group>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async createExpense(
@@ -85,7 +89,18 @@ export class FinanceService {
       participants,
     });
 
-    return this.expenseRepo.save(expense);
+    const saved = await this.expenseRepo.save(expense);
+
+    const otherParticipantIds = dto.participants
+      .map((p) => p.userId)
+      .filter((id) => id !== paidBy.id);
+    void this.notificationsService.sendToUsers(
+      otherParticipantIds,
+      'Nouvelle dépense partagée',
+      `${paidBy.firstName} a ajouté "${dto.title}" (${dto.amount.toFixed(2)} €)`,
+    );
+
+    return saved;
   }
 
   async findExpenses(groupId: string): Promise<object[]> {
@@ -95,6 +110,66 @@ export class FinanceService {
     });
 
     return expenses.map((e) => this.formatExpense(e));
+  }
+
+  async updateExpense(
+    expenseId: string,
+    dto: UpdateExpenseDto,
+    userId: string,
+  ): Promise<object> {
+    const expense = await this.expenseRepo.findOne({
+      where: { id: expenseId },
+      relations: ['paidBy', 'group', 'group.owner', 'group.members', 'group.members.user'],
+    });
+    if (!expense) throw new NotFoundException('Dépense non trouvée');
+    if (expense.paidBy && expense.paidBy.id !== userId) {
+      throw new ForbiddenException('Seul le payeur peut modifier cette dépense');
+    }
+
+    // Scalar fields
+    if (dto.title !== undefined) expense.title = dto.title;
+    if (dto.category !== undefined) expense.category = dto.category;
+    if (dto.date !== undefined) expense.date = dto.date;
+    if (dto.amount !== undefined) expense.amount = dto.amount;
+    if (dto.splitMode !== undefined) expense.splitMode = dto.splitMode;
+
+    await this.expenseRepo.save(expense);
+
+    // Participants
+    if (dto.participants !== undefined) {
+      const group = expense.group;
+      const memberIds = new Set<string>();
+      memberIds.add(group.owner.id);
+      for (const gm of group.members) memberIds.add(gm.user.id);
+
+      for (const p of dto.participants) {
+        if (!memberIds.has(p.userId)) {
+          throw new BadRequestException(
+            `L'utilisateur ${p.userId} n'est pas membre du groupe`,
+          );
+        }
+      }
+
+      const currentAmount = Number(dto.amount ?? expense.amount);
+      const currentSplitMode = dto.splitMode ?? expense.splitMode;
+      const paidById = expense.paidBy?.id ?? dto.participants[0].userId;
+      const shares = this.computeShares(currentAmount, dto.participants, currentSplitMode, paidById);
+
+      await this.participantRepo.delete({ expense: { id: expenseId } } as any);
+
+      const newParts: ExpenseParticipant[] = [];
+      for (const p of dto.participants) {
+        const user = await this.userRepo.findOne({ where: { id: p.userId } });
+        if (!user) continue;
+        newParts.push(
+          this.participantRepo.create({ expense, user, share: shares.get(p.userId) ?? 0 }),
+        );
+      }
+      await this.participantRepo.save(newParts);
+    }
+
+    const reloaded = await this.expenseRepo.findOne({ where: { id: expenseId } });
+    return this.formatExpense(reloaded!);
   }
 
   async deleteExpense(expenseId: string): Promise<void> {
@@ -125,6 +200,13 @@ export class FinanceService {
     });
 
     const saved = await this.reimbursementRepo.save(reimbursement);
+
+    void this.notificationsService.sendToUser(
+      dto.toUserId,
+      'Remboursement reçu',
+      `${fromUser.firstName} vous a remboursé ${dto.amount.toFixed(2)} €`,
+    );
+
     return this.formatReimbursement(saved);
   }
 

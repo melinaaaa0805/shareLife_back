@@ -7,11 +7,14 @@ import {
   Body,
   UseGuards,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { GroupInvitationsService } from './group-invitations.service';
 import { CurrentUser } from '../help';
 import { User } from '../users/entities/user.entity';
 
+@ApiTags('Invitations')
+@ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))
 @Controller('group-invitations')
 export class GroupInvitationsController {

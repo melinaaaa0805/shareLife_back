@@ -7,13 +7,17 @@ import {
   Patch,
   Post,
   Query,
-  Request,
   UseGuards,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { MealIngredient } from './entities/weekly-meal.entity';
 import { MealsService } from './meals.service';
+import { CurrentUser } from '../help';
+import { User } from '../users/entities/user.entity';
 
+@ApiTags('Repas')
+@ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))
 @Controller('meals')
 export class MealsController {
@@ -55,7 +59,7 @@ export class MealsController {
   @Post(':groupId')
   create(
     @Param('groupId') groupId: string,
-    @Request() req: any,
+    @CurrentUser() user: User,
     @Body()
     body: {
       name: string;
@@ -67,7 +71,7 @@ export class MealsController {
       year: number;
     },
   ) {
-    return this.mealsService.create(groupId, req.user.id, body);
+    return this.mealsService.create(groupId, user.id, body);
   }
 
   @Patch(':id')

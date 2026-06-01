@@ -9,12 +9,15 @@ import {
   UseGuards,
   NotFoundException,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { ShoppingListService } from './shopping-list.service';
 import { Group } from '../groups/entities/group.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 
+@ApiTags('Listes de courses')
+@ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))
 @Controller('shopping-lists')
 export class ShoppingListController {

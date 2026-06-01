@@ -2,18 +2,23 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Delete,
   Body,
   Param,
   UseGuards,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { FinanceService } from './finance.service';
 import { CreateExpenseDto } from './dto/create-expense.dto';
+import { UpdateExpenseDto } from './dto/update-expense.dto';
 import { CreateReimbursementDto } from './dto/create-reimbursement.dto';
 import { CurrentUser } from '../help';
 import { User } from '../users/entities/user.entity';
 
+@ApiTags('Finance')
+@ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))
 @Controller('finance')
 export class FinanceController {
@@ -31,6 +36,15 @@ export class FinanceController {
   @Get('group/:groupId/expenses')
   findExpenses(@Param('groupId') groupId: string) {
     return this.financeService.findExpenses(groupId);
+  }
+
+  @Patch('expenses/:expenseId')
+  updateExpense(
+    @Param('expenseId') expenseId: string,
+    @Body() dto: UpdateExpenseDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.financeService.updateExpense(expenseId, dto, user.id);
   }
 
   @Delete('expenses/:expenseId')

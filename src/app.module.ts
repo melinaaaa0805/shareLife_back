@@ -15,6 +15,11 @@ import { MealsModule } from './meals/meals.module';
 import { MealVotesModule } from './meal-votes/meal-votes.module';
 import { GroupInvitationsModule } from './group-invitations/group-invitations.module';
 import { FinanceModule } from './finance/finance.module';
+import { ScoresModule } from './scores/scores.module';
+import { InsightsModule } from './insights/insights.module';
+import { TimersModule } from './timers/timers.module';
+import { GamificationModule } from './gamification/gamification.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -31,6 +36,11 @@ import { FinanceModule } from './finance/finance.module';
     MealVotesModule,
     GroupInvitationsModule,
     FinanceModule,
+    ScoresModule,
+    InsightsModule,
+    TimersModule,
+    GamificationModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

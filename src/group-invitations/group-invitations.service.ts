@@ -10,6 +10,7 @@ import { GroupInvitation } from './entities/group-invitation.entity';
 import { Group } from '../groups/entities/group.entity';
 import { GroupMember } from '../group-member/entities/group-member.entity';
 import { User } from '../users/entities/user.entity';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class GroupInvitationsService {
@@ -22,6 +23,7 @@ export class GroupInvitationsService {
     private memberRepo: Repository<GroupMember>,
     @InjectRepository(User)
     private userRepo: Repository<User>,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async sendInvitation(groupId: string, invitedById: string, email: string) {
@@ -66,6 +68,13 @@ export class GroupInvitationsService {
     });
 
     const saved = await this.invitationRepo.save(invitation);
+
+    void this.notificationsService.sendToUser(
+      invitedUser.id,
+      'Nouvelle invitation',
+      `${invitedBy.firstName} vous invite à rejoindre ${group.name}`,
+    );
+
     return {
       id: saved.id,
       status: saved.status,
@@ -108,13 +117,24 @@ export class GroupInvitationsService {
     if (invitation.status !== 'PENDING') throw new ConflictException('Cette invitation a déjà été traitée');
 
     if (accept) {
-      // Ajouter comme membre
       const member = this.memberRepo.create({
         group: invitation.group,
         user: invitation.invitedUser,
       });
       await this.memberRepo.save(member);
       invitation.status = 'ACCEPTED';
+
+      const groupWithOwner = await this.groupRepo.findOne({
+        where: { id: invitation.group.id },
+        relations: ['owner'],
+      });
+      if (groupWithOwner?.owner) {
+        void this.notificationsService.sendToUser(
+          groupWithOwner.owner.id,
+          'Invitation acceptée',
+          `${invitation.invitedUser.firstName} a rejoint ${groupWithOwner.name}`,
+        );
+      }
     } else {
       invitation.status = 'DECLINED';
     }

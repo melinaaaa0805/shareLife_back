@@ -6,9 +6,10 @@ import { GroupInvitation } from './entities/group-invitation.entity';
 import { Group } from '../groups/entities/group.entity';
 import { GroupMember } from '../group-member/entities/group-member.entity';
 import { User } from '../users/entities/user.entity';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([GroupInvitation, Group, GroupMember, User])],
+  imports: [TypeOrmModule.forFeature([GroupInvitation, Group, GroupMember, User]), NotificationsModule],
   controllers: [GroupInvitationsController],
   providers: [GroupInvitationsService],
 })

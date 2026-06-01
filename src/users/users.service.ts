@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
+import { Group } from '../groups/entities/group.entity';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 
@@ -22,6 +23,8 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @InjectRepository(Group)
+    private groupRepository: Repository<Group>,
   ) {}
 
   async findOne(id: string): Promise<User> {
@@ -66,5 +69,23 @@ export class UsersService {
       role: user.role,
       avatarColor: user.avatarColor,
     };
+  }
+
+  async deleteAccount(userId: string, password: string): Promise<void> {
+    const user = await this.findOne(userId);
+
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) throw new UnauthorizedException('Mot de passe incorrect');
+
+    // Delete groups owned by the user first (FK Group.owner → User has no CASCADE)
+    const ownedGroups = await this.groupRepository.find({
+      where: { owner: { id: userId } },
+    });
+    for (const group of ownedGroups) {
+      await this.groupRepository.delete(group.id);
+    }
+
+    // Delete the user — remaining memberships cascade via DB (GroupMember.user onDelete: CASCADE)
+    await this.userRepository.delete(userId);
   }
 }

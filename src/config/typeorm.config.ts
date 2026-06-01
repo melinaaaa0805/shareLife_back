@@ -11,6 +11,8 @@ import { GroupInvitation } from '../group-invitations/entities/group-invitation.
 import { Expense } from '../finance/entities/expense.entity';
 import { ExpenseParticipant } from '../finance/entities/expense-participant.entity';
 import { Reimbursement } from '../finance/entities/reimbursement.entity';
+import { Reward } from '../scores/entities/reward.entity';
+import { TaskTimer } from '../timers/entities/task-timer.entity';
 
 export const typeOrmConfig: TypeOrmModuleOptions = {
   type: 'postgres',
@@ -20,6 +22,9 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
   password: process.env.DB_PASSWORD || 'postgres',
   database: process.env.DB_NAME || 'sharelife_db',
   autoLoadEntities: true,
-  entities: [User, Group, GroupMember, Task, TaskAssignment, ShoppingList, WeeklyMeal, MealVote, GroupInvitation, Expense, ExpenseParticipant, Reimbursement],
-  synchronize: true, // seulement pour dev
+  entities: [User, Group, GroupMember, Task, TaskAssignment, ShoppingList, WeeklyMeal, MealVote, GroupInvitation, Expense, ExpenseParticipant, Reimbursement, Reward, TaskTimer],
+  synchronize: process.env.NODE_ENV !== 'production',
+  migrations: [__dirname + '/../migrations/*{.ts,.js}'],
+  migrationsRun: process.env.NODE_ENV === 'production',
+  migrationsTableName: 'migrations',
 };

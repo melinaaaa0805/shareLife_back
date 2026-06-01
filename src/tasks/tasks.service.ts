@@ -272,6 +272,20 @@ export class TasksService {
     return { deleted: tasks.length };
   }
 
+  async patch(id: string, dto: Partial<CreateTaskDto>): Promise<Task> {
+    const task = await this.taskRepository.findOne({ where: { id } });
+    if (!task) throw new NotFoundException('Tâche introuvable');
+    Object.assign(task, {
+      ...(dto.title !== undefined && { title: dto.title }),
+      ...(dto.description !== undefined && { description: dto.description }),
+      ...(dto.weight !== undefined && { weight: dto.weight }),
+      ...(dto.duration !== undefined && { duration: dto.duration }),
+      ...(dto.dayOfWeek !== undefined && { dayOfWeek: dto.dayOfWeek }),
+      ...(dto.taskType !== undefined && { taskType: dto.taskType }),
+    });
+    return this.taskRepository.save(task);
+  }
+
   async remove(id: string): Promise<void> {
     const task = await this.taskRepository.findOne({
       where: { id },

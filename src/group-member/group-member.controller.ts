@@ -6,10 +6,13 @@ import {
   Param,
   UseGuards,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { GroupMemberService } from './group-member.service';
 import { User } from '../users/entities/user.entity';
 import { AuthGuard } from '@nestjs/passport';
 
+@ApiTags('Membres')
+@ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))
 @Controller('group-member')
 export class GroupMemberController {

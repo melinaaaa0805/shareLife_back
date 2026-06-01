@@ -28,4 +28,7 @@ export class User {
 
   @Column({ nullable: true, type: 'timestamp' })
   resetTokenExpiry: Date | null;
+
+  @Column({ nullable: true, type: 'varchar' })
+  pushToken: string | null;
 }

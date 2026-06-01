@@ -7,6 +7,7 @@ import { ExpenseParticipant } from './entities/expense-participant.entity';
 import { Reimbursement } from './entities/reimbursement.entity';
 import { Group } from '../groups/entities/group.entity';
 import { User } from '../users/entities/user.entity';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { User } from '../users/entities/user.entity';
       Group,
       User,
     ]),
+    NotificationsModule,
   ],
   controllers: [FinanceController],
   providers: [FinanceService],
