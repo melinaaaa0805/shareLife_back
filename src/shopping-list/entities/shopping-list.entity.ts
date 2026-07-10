@@ -1,4 +1,3 @@
-// shopping-list.entity.ts
 import {
   Entity,
   PrimaryGeneratedColumn,

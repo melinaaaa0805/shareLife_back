@@ -4,8 +4,6 @@ import { Repository } from 'typeorm';
 import { TaskAssignment } from '../task-assignment/entities/task-assignment.entity';
 import { TaskTimer } from '../timers/entities/task-timer.entity';
 
-// ── Badge definitions ─────────────────────────────────────────────────────────
-
 export interface Badge {
   id: string;
   label: string;
@@ -57,7 +55,6 @@ export class GamificationService {
     totalTasksDone: number;
     totalTimeSeconds: number;
   }> {
-    // ── 1. Fetch all DONE assignments with completedAt ────────────────────
     const doneAssignments = await this.assignmentRepo.find({
       where: { user: { id: userId }, status: 'DONE' },
       order: { completedAt: 'ASC' },
@@ -65,7 +62,6 @@ export class GamificationService {
 
     const totalTasksDone = doneAssignments.length;
 
-    // ── 2. Compute streaks ───────────────────────────────────────────────
     const activeDays = new Set<string>();
     for (const a of doneAssignments) {
       if (a.completedAt) {
@@ -74,7 +70,6 @@ export class GamificationService {
     }
     const { current: streak, best: bestStreak } = this.computeStreaks(activeDays);
 
-    // ── 3. Total time from timers ────────────────────────────────────────
     const timers = await this.timerRepo.find({
       where: { user: { id: userId } },
       select: ['durationSeconds'],
@@ -84,7 +79,6 @@ export class GamificationService {
       0,
     );
 
-    // ── 4. Badges ────────────────────────────────────────────────────────
     const now = new Date();
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 3600 * 1000);
 
@@ -123,8 +117,6 @@ export class GamificationService {
 
     return { streak, bestStreak, badges, totalTasksDone, totalTimeSeconds };
   }
-
-  // ── Private helpers ───────────────────────────────────────────────────────
 
   private computeStreaks(activeDays: Set<string>): {
     current: number;

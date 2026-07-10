@@ -5,8 +5,6 @@ import { Task } from '../tasks/entities/task.entity';
 import { TaskAssignment } from '../task-assignment/entities/task-assignment.entity';
 import { Group } from '../groups/entities/group.entity';
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
 type InsightType =
   | 'OVERLOAD_WARNING'
   | 'REBALANCE_SUGGESTION'
@@ -32,8 +30,6 @@ export interface Insight {
   action?: InsightAction;
 }
 
-// ── Service ───────────────────────────────────────────────────────────────────
-
 @Injectable()
 export class InsightsService {
   constructor(
@@ -57,7 +53,6 @@ export class InsightsService {
     });
     if (!group) throw new NotFoundException('Groupe non trouvé');
 
-    // All members (owner + members)
     const allMembers: { id: string; firstName: string }[] = [];
     allMembers.push({ id: group.owner.id, firstName: group.owner.firstName });
     for (const gm of group.members) {
@@ -66,7 +61,6 @@ export class InsightsService {
       }
     }
 
-    // Fetch this week's tasks with assignments
     const tasks = await this.taskRepo.find({
       where: { group: { id: groupId }, weekNumber, year, isTemplate: false },
       relations: ['assignments', 'assignments.user'],
@@ -74,7 +68,6 @@ export class InsightsService {
 
     const insights: Insight[] = [];
 
-    // ── 1. Weekly summary ───────────────────────────────────────────────────
     const totalTasks = tasks.length;
     const doneTasks = tasks.filter((t) =>
       t.assignments?.some((a) => a.status === 'DONE'),
@@ -122,7 +115,6 @@ export class InsightsService {
       });
     }
 
-    // ── 2. Load per member ──────────────────────────────────────────────────
     const loadMap = new Map<string, number>();
     for (const m of allMembers) loadMap.set(m.id, 0);
 
@@ -200,8 +192,7 @@ export class InsightsService {
       }
     }
 
-    // ── 3. Late tasks (assigned to me, PENDING, day already passed) ─────────
-    const todayDow = (new Date().getDay() + 6) % 7; // 0=Mon … 6=Sun
+    const todayDow = (new Date().getDay() + 6) % 7; // 0=lun … 6=dim (ISO, lundi en base)
     const lateTasks = tasks.filter(
       (t) =>
         t.dayOfWeek < todayDow &&
@@ -229,7 +220,6 @@ export class InsightsService {
       });
     }
 
-    // ── 4. Template suggestions (tasks done 2+ times same title) ────────────
     const templateRows: { title: string; weekCount: string }[] =
       await this.taskRepo.manager.query(
         `

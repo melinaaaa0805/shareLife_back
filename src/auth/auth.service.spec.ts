@@ -31,6 +31,9 @@ const mockUserRepo = () => ({
 const mockJwtService = { sign: jest.fn().mockReturnValue('mock-jwt-token') };
 const mockMailService = { sendPasswordReset: jest.fn().mockResolvedValue(undefined) };
 
+// bcrypt avec cost 12 prend ~300ms-1s : on augmente le timeout global de la suite
+jest.setTimeout(20000);
+
 // ── Suite ─────────────────────────────────────────────────────────────────────
 
 describe('AuthService', () => {
@@ -103,10 +106,12 @@ describe('AuthService', () => {
 
       await service.register(dto);
 
+      // Le mot de passe brut ne doit jamais être stocké
       expect(capturedPassword).not.toBe(dto.password);
+      // bcrypt.compare valide que le hash correspond bien au mot de passe original
       const isHashed = await bcrypt.compare(dto.password, capturedPassword);
       expect(isHashed).toBe(true);
-    });
+    }, 20000);
   });
 
   // ── login ─────────────────────────────────────────────────────────────────
@@ -115,7 +120,8 @@ describe('AuthService', () => {
     const dto = { email: 'alice@example.com', password: 'Password1' };
 
     it('retourne un token JWT pour des identifiants valides', async () => {
-      const hashed = await bcrypt.hash(dto.password, 12);
+      // cost 4 : suffisant pour les tests (cost 12 est réservé à la prod)
+      const hashed = await bcrypt.hash(dto.password, 4);
       userRepo.findOne.mockResolvedValue(makeUser({ password: hashed }));
 
       const result = await service.login(dto);
@@ -125,7 +131,7 @@ describe('AuthService', () => {
     });
 
     it('ne renvoie pas le mot de passe hashé dans la réponse', async () => {
-      const hashed = await bcrypt.hash(dto.password, 12);
+      const hashed = await bcrypt.hash(dto.password, 4);
       userRepo.findOne.mockResolvedValue(makeUser({ password: hashed }));
 
       const result = await service.login(dto);
@@ -134,7 +140,7 @@ describe('AuthService', () => {
     });
 
     it('lève UnauthorizedException si le mot de passe est incorrect', async () => {
-      const hashed = await bcrypt.hash('mauvais-mot-de-passe', 12);
+      const hashed = await bcrypt.hash('mauvais-mot-de-passe', 4);
       userRepo.findOne.mockResolvedValue(makeUser({ password: hashed }));
 
       await expect(service.login(dto)).rejects.toThrow(UnauthorizedException);
@@ -153,7 +159,7 @@ describe('AuthService', () => {
       try { await service.login(dto); } catch (e) { errorWhenNoUser = e as UnauthorizedException; }
 
       // Mauvais mot de passe
-      const hashed = await bcrypt.hash('mauvais-mdp', 12);
+      const hashed = await bcrypt.hash('mauvais-mdp', 4);
       userRepo.findOne.mockResolvedValue(makeUser({ password: hashed }));
       let errorWhenBadPwd: UnauthorizedException | null = null;
       try { await service.login(dto); } catch (e) { errorWhenBadPwd = e as UnauthorizedException; }

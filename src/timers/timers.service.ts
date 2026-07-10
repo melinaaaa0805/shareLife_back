@@ -22,7 +22,6 @@ export class TimersService {
     const task = await this.taskRepo.findOne({ where: { id: taskId } });
     if (!task) throw new NotFoundException('Tâche non trouvée');
 
-    // Check no running timer already exists
     const running = await this.timerRepo.findOne({
       where: { task: { id: taskId }, user: { id: user.id }, endedAt: IsNull() },
     });

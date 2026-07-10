@@ -286,4 +286,23 @@ describe('TaskAssignmentService', () => {
       await expect(service.findByUser('inexistant')).rejects.toThrow(NotFoundException);
     });
   });
+
+  describe('getUnassignedTasks()', () => {
+    it('retourne les tâches non assignées via QueryBuilder', async () => {
+      const tasks = [{ id: 'task-1', title: 'Vaisselle' }];
+      const mockQb = {
+        leftJoin: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue(tasks),
+      };
+      taskRepo.createQueryBuilder.mockReturnValue(mockQb);
+
+      const result = await service.getUnassignedTasks('group-1');
+
+      expect(taskRepo.createQueryBuilder).toHaveBeenCalledWith('task');
+      expect(mockQb.getMany).toHaveBeenCalled();
+      expect(result).toBe(tasks);
+    });
+  });
 });

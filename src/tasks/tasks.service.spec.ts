@@ -312,4 +312,117 @@ describe('TasksService', () => {
       expect(result).toEqual(templates);
     });
   });
+
+  // ── applyWeekTemplate() ───────────────────────────────────────────────────
+
+  describe('applyWeekTemplate()', () => {
+    it('throws NotFoundException si le groupe est introuvable', async () => {
+      groupRepo.findOne.mockResolvedValue(null);
+      await expect(service.applyWeekTemplate('group-x', 22, 2026, makeUser())).rejects.toThrow(NotFoundException);
+    });
+
+    it('retourne un tableau vide si aucun template', async () => {
+      groupRepo.findOne.mockResolvedValue(makeGroup());
+      taskRepo.find.mockResolvedValue([]);
+      taskRepo.save.mockResolvedValue([]);
+
+      const result = await service.applyWeekTemplate('group-1', 22, 2026, makeUser());
+      expect(result).toEqual([]);
+    });
+
+    it('crée une tâche par template ONCE', async () => {
+      const group = makeGroup();
+      const template = makeTask({ isTemplate: true, frequency: Frequency.ONCE, dayOfWeek: 1 });
+      groupRepo.findOne.mockResolvedValue(group);
+      taskRepo.find.mockResolvedValue([template]);
+      taskRepo.create.mockImplementation((data: any) => ({ ...data }));
+      taskRepo.save.mockImplementation(async (tasks: any) => tasks);
+
+      const result = await service.applyWeekTemplate('group-1', 22, 2026, makeUser()) as any[];
+
+      expect(taskRepo.save).toHaveBeenCalled();
+      expect(result).toHaveLength(1);
+      expect(result[0].isTemplate).toBe(false);
+    });
+
+    it('crée 7 tâches pour un template DAILY (une par jour)', async () => {
+      const group = makeGroup();
+      const template = makeTask({ isTemplate: true, frequency: Frequency.DAILY, dayOfWeek: 0 });
+      groupRepo.findOne.mockResolvedValue(group);
+      taskRepo.find.mockResolvedValue([template]);
+      taskRepo.create.mockImplementation((data: any) => ({ ...data }));
+      taskRepo.save.mockImplementation(async (tasks: any) => tasks);
+
+      const result = await service.applyWeekTemplate('group-1', 22, 2026, makeUser()) as any[];
+
+      expect(result).toHaveLength(7);
+      const days = result.map((t: any) => t.dayOfWeek);
+      expect(days).toEqual([0, 1, 2, 3, 4, 5, 6]);
+    });
+  });
+
+  // ── findByDateAndIdGroup() ────────────────────────────────────────────────
+
+  describe('findByDateAndIdGroup()', () => {
+    it('retourne les tâches du jour formatées pour le frontend', async () => {
+      const assignment = { status: 'PENDING', user: { id: 'user-1', firstName: 'Alice' } };
+      const task = makeTask({ assignments: [assignment] });
+      taskRepo.find.mockResolvedValue([task]);
+
+      const result = await service.findByDateAndIdGroup('2026-05-25', 'group-uuid-1');
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({
+        id: task.id,
+        taskAssignment: { user: { id: 'user-1', firstName: 'Alice' }, status: 'PENDING' },
+      });
+    });
+
+    it('retourne taskAssignment null si aucune assignation', async () => {
+      const task = makeTask({ assignments: [] });
+      taskRepo.find.mockResolvedValue([task]);
+
+      const result = await service.findByDateAndIdGroup('2026-05-25', 'group-uuid-1');
+
+      expect(result[0].taskAssignment).toBeNull();
+      expect(result[0].coAssignment).toBeNull();
+    });
+
+    it('inclut la co-assignation si présente', async () => {
+      const a1 = { status: 'PENDING', user: { id: 'user-1', firstName: 'Alice' } };
+      const a2 = { status: 'DONE', user: { id: 'user-2', firstName: 'Bob' } };
+      const task = makeTask({ assignments: [a1, a2] });
+      taskRepo.find.mockResolvedValue([task]);
+
+      const result = await service.findByDateAndIdGroup('2026-05-25', 'group-uuid-1');
+
+      expect(result[0].coAssignment).toMatchObject({ user: { id: 'user-2' }, status: 'DONE' });
+    });
+
+    it('gère le cas user null dans une assignation', async () => {
+      const assignment = { status: 'PENDING', user: null };
+      const task = makeTask({ assignments: [assignment] });
+      taskRepo.find.mockResolvedValue([task]);
+
+      const result = await service.findByDateAndIdGroup('2026-05-25', 'group-uuid-1');
+
+      expect(result[0].taskAssignment?.user).toBeNull();
+    });
+  });
+
+  // ── findWeekTasks() ───────────────────────────────────────────────────────
+
+  describe('findWeekTasks()', () => {
+    it('retourne les tâches de la semaine avec les relations', async () => {
+      const tasks = [makeTask(), makeTask({ id: 'task-2' })];
+      taskRepo.find.mockResolvedValue(tasks);
+
+      const result = await service.findWeekTasks('group-uuid-1', 22, 2026);
+
+      expect(taskRepo.find).toHaveBeenCalledWith(expect.objectContaining({
+        where: { group: { id: 'group-uuid-1' }, weekNumber: 22, year: 2026 },
+      }));
+      expect(result).toBe(tasks);
+    });
+  });
 });

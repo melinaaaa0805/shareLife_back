@@ -76,7 +76,7 @@ export class GroupsService {
     const existing = await this.groupMemberRepository.findOne({
       where: { group: { id: groupId }, user: { id: dto.userId } },
     });
-    if (existing) return existing; // éviter doublon
+    if (existing) return existing;
 
     const member = this.groupMemberRepository.create({ group, user });
     return this.groupMemberRepository.save(member);
@@ -91,13 +91,11 @@ export class GroupsService {
       throw new NotFoundException('Membre non trouvé dans le groupe');
   }
   async getGroupsForUser(email: string): Promise<GroupResponseDto[]> {
-    // 1️⃣ Groupes dont je suis propriétaire
     const ownedGroups = await this.groupRepository.find({
       where: { owner: { email } },
       relations: ['owner'],
     });
 
-    // 2️⃣ Liens membership → on récupère les groups avec leur owner
     const memberLinks = await this.groupMemberRepository.find({
       where: { user: { email } },
       relations: ['group', 'group.owner'],
@@ -105,13 +103,11 @@ export class GroupsService {
 
     const memberGroups = memberLinks.map((gm) => gm.group);
 
-    // 3️⃣ Fusion sans doublons
     const allGroups = [
       ...ownedGroups,
       ...memberGroups.filter((g) => !ownedGroups.find((og) => og.id === g.id)),
     ];
 
-    // 4️⃣ Pour chaque groupe, on charge ses membres dans la table intermédiaire
     const groupsWithMembers = await Promise.all(
       allGroups.map(async (group) => {
         const members = await this.groupMemberRepository.find({
@@ -311,10 +307,9 @@ export class GroupsService {
     });
     if (!group) throw new NotFoundException('Groupe non trouvé');
 
-    // Construire la liste complète des membres avec profil
     const membersWithProfile: { user: User; profile: 'ADULT' | 'CHILD' }[] = [];
 
-    // Vérifier si le owner est déjà dans members
+    // Le propriétaire n'a pas de ligne GroupMember — il doit être ajouté manuellement
     const ownerInMembers = group.members.find((m) => m.user.id === group.owner.id);
     if (!ownerInMembers) {
       membersWithProfile.push({ user: group.owner, profile: 'ADULT' });
@@ -326,7 +321,6 @@ export class GroupsService {
       });
     }
 
-    // Récupérer les tâches non assignées de la semaine
     const unassignedTasks = await this.taskRepository
       .createQueryBuilder('task')
       .leftJoin('task.assignments', 'assignment')
@@ -340,7 +334,6 @@ export class GroupsService {
 
     if (unassignedTasks.length === 0) return { assigned: 0 };
 
-    // Score actuel de chaque membre (tâches déjà assignées cette semaine)
     const scores = new Map<string, number>();
     for (const m of membersWithProfile) {
       scores.set(m.user.id, 0);

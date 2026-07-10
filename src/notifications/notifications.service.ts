@@ -42,7 +42,7 @@ export class NotificationsService {
         ),
       });
     } catch {
-      // Non-blocking — notification failure must not break the API response
+      // Non-bloquant — une erreur push ne doit jamais interrompre la réponse API
     }
   }
 }

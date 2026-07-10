@@ -30,7 +30,7 @@ import { JwtUser } from '../auth/jwt-user.type';
 export class GroupsController {
   constructor(
     private readonly groupsService: GroupsService,
-    private readonly usersService: UsersService, // injecter le service users
+    private readonly usersService: UsersService,
   ) {}
 
   @Post()

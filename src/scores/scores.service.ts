@@ -43,8 +43,6 @@ export class ScoresService {
     private readonly groupRepo: Repository<Group>,
   ) {}
 
-  // ── Leaderboard ─────────────────────────────────────────────────────────────
-
   async getLeaderboard(
     groupId: string,
     query: LeaderboardQueryDto,
@@ -154,8 +152,6 @@ export class ScoresService {
     };
   }
 
-  // ── Rewards CRUD ─────────────────────────────────────────────────────────────
-
   async findRewards(groupId: string): Promise<object[]> {
     const rewards = await this.rewardRepo.find({
       where: { group: { id: groupId } },
@@ -197,8 +193,6 @@ export class ScoresService {
     if (!reward) throw new NotFoundException('Récompense non trouvée');
     await this.rewardRepo.delete(rewardId);
   }
-
-  // ── Private helpers ───────────────────────────────────────────────────────────
 
   private formatReward(r: Reward): object {
     return {

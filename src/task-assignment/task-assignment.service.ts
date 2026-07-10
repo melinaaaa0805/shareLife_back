@@ -89,7 +89,6 @@ export class TaskAssignmentService {
     if (task.assignments && task.assignments.length >= maxAssignments) {
       throw new BadRequestException('La tâche a déjà atteint le nombre maximum d\'assignations');
     }
-    // Empêcher le même utilisateur d'être assigné deux fois
     if (task.assignments?.some((a) => (a.user as any)?.id === targetUserId)) {
       throw new BadRequestException('Cet utilisateur est déjà assigné à cette tâche');
     }
@@ -132,13 +131,11 @@ export class TaskAssignmentService {
   }
 
   async findByUser(id: string) {
-    // On récupère l'user via son email
     const user = await this.userRepo.findOne({ where: { id } });
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    // On cherche toutes les assignations de tâches pour ce user
     const assignments = await this.assignmentRepo.find({
       where: { user: { id: user.id } },
       relations: ['task', 'task.group', 'user'],

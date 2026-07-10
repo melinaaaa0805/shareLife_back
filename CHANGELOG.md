@@ -6,6 +6,30 @@ Le format respecte [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/) et l
 
 ---
 
+## [1.1.2] — 2026-07-10
+
+### Sécurité
+
+- Ajout du middleware `helmet` (en-têtes de sécurité HTTP : `X-Content-Type-Options`, `X-Frame-Options`, `Strict-Transport-Security`, suppression de `X-Powered-By`)
+- Mise à jour `nodemailer` 8.x → 9.0.3 (correctif d'une faille SSRF/lecture de fichier via l'option `raw`, non utilisée dans ShareLife)
+- `npm audit fix` appliqué : 32 vulnérabilités corrigées (1 critique, 14 hautes, 14 modérées, 3 basses) → 0 vulnérabilité résiduelle
+- Nouvelle étape `npm audit --audit-level=high` dans le job `lint` du pipeline CI — tout merge introduisant une CVE haute/critique est désormais bloqué automatiquement
+
+### Modifié
+
+- Frontend : suppression de `.github/workflow/deploy.yml` (workflow Cloud Run non fonctionnel — mauvais nom de dossier non reconnu par GitHub Actions, aucun `Dockerfile` associé, incohérent avec la stratégie de publication mobile via Expo EAS)
+
+---
+
+## [1.1.1] — 2026-06-15
+
+### Ajouté
+
+- Audit d'accessibilité complet sur les 5 écrans principaux (LoginScreen, RegisterScreen, GroupsScreen, TasksScreens, FinanceScreen) : 68 propriétés d'accessibilité (`accessibilityLabel`, `accessibilityRole`, `accessibilityState`, `accessibilityLiveRegion`)
+- Référentiel WCAG 2.1 niveau AA retenu et documenté pour l'application mobile
+
+---
+
 ## [1.1.0] — 2026-06-07
 
 ### Ajouté

@@ -29,7 +29,6 @@ export class TasksService {
 
     const tasksToSave = [];
 
-    // Convertir la date string en Date JS pour manipuler les jours
     const startDate = createTaskDto.date
       ? new Date(createTaskDto.date)
       : new Date();
@@ -161,7 +160,6 @@ export class TasksService {
     }
 
     const tasksToSave = templates.map((tpl) => {
-      // Pour les tâches DAILY, on crée 7 occurrences
       return this.taskRepository.create({
         title: tpl.title,
         description: tpl.description,
@@ -178,7 +176,6 @@ export class TasksService {
       });
     });
 
-    // Pour DAILY, dupliquer sur tous les jours de la semaine
     const expanded: (typeof tasksToSave[0])[] = [];
     for (const task of tasksToSave) {
       if (task.frequency === 'DAILY') {

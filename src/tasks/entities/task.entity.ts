@@ -32,7 +32,7 @@ export class Task {
   dayOfWeek: number; // 0 = lundi, 6 = dimanche
 
   @Column({ default: 1 })
-  weight: number; // 0 = lundi, 6 = dimanche
+  weight: number;
 
   @ManyToOne(() => Group, { onDelete: 'CASCADE' })
   group: Group;

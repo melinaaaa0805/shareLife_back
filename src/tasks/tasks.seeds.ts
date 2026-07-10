@@ -1,8 +1,6 @@
-// task.seed.ts
 import { Task } from './entities/task.entity';
 
 export const defaultTasks: Partial<Task>[] = [
-  // ── Quotidien ──────────────────────────────────────────────────────────────
   {
     title: 'Préparer le repas',
     description: 'Préparer le dîner pour toute la famille',

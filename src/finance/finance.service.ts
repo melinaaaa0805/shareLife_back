@@ -45,7 +45,6 @@ export class FinanceService {
     });
     if (!group) throw new NotFoundException('Groupe non trouvé');
 
-    // Collect all member IDs (owner + members)
     const memberIds = new Set<string>();
     memberIds.add(group.owner.id);
     for (const gm of group.members) {
@@ -225,7 +224,6 @@ export class FinanceService {
     });
     if (!group) throw new NotFoundException('Groupe non trouvé');
 
-    // Map userId → user info
     const usersMap = new Map<string, { firstName: string; email: string }>();
     usersMap.set(group.owner.id, {
       firstName: group.owner.firstName,
@@ -238,7 +236,6 @@ export class FinanceService {
       });
     }
 
-    // Initialize net balances for all members
     const net = new Map<string, number>();
     for (const uid of usersMap.keys()) {
       net.set(uid, 0);
@@ -251,7 +248,6 @@ export class FinanceService {
       owed.set(uid, 0);
     }
 
-    // Process expenses
     const expenses = await this.expenseRepo.find({
       where: { group: { id: groupId } },
     });
@@ -272,7 +268,6 @@ export class FinanceService {
       }
     }
 
-    // Process reimbursements
     const reimbursements = await this.reimbursementRepo.find({
       where: { group: { id: groupId } },
     });
@@ -304,8 +299,6 @@ export class FinanceService {
 
     return { balances, simplifiedDebts };
   }
-
-  // ── Private helpers ────────────────────────────────────────────────────────
 
   private computeShares(
     amount: number,

@@ -9,6 +9,12 @@ import { User } from '../users/entities/user.entity';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ExpenseCategory } from './enums/expense-category.enum';
 import { SplitMode } from './enums/split-mode.enum';
+import { NotificationsService } from '../notifications/notifications.service';
+
+const mockNotificationsService = {
+  sendToUsers: jest.fn().mockResolvedValue(undefined),
+  sendToUser: jest.fn().mockResolvedValue(undefined),
+};
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -54,6 +60,7 @@ describe('FinanceService', () => {
         { provide: getRepositoryToken(Reimbursement), useFactory: mockRepo },
         { provide: getRepositoryToken(Group), useFactory: mockRepo },
         { provide: getRepositoryToken(User), useFactory: mockRepo },
+        { provide: NotificationsService, useValue: mockNotificationsService },
       ],
     }).compile();
 

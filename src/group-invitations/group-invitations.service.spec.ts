@@ -10,6 +10,7 @@ import {
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
+import { NotificationsService } from '../notifications/notifications.service';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -60,6 +61,10 @@ describe('GroupInvitationsService', () => {
         { provide: getRepositoryToken(Group), useFactory: mockRepo },
         { provide: getRepositoryToken(GroupMember), useFactory: mockRepo },
         { provide: getRepositoryToken(User), useFactory: mockRepo },
+        {
+          provide: NotificationsService,
+          useValue: { sendToUsers: jest.fn(), sendToUser: jest.fn() },
+        },
       ],
     }).compile();
 

@@ -24,6 +24,7 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
   autoLoadEntities: true,
   entities: [User, Group, GroupMember, Task, TaskAssignment, ShoppingList, WeeklyMeal, MealVote, GroupInvitation, Expense, ExpenseParticipant, Reimbursement, Reward, TaskTimer],
   synchronize: process.env.NODE_ENV !== 'production',
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
   migrations: [__dirname + '/../migrations/*{.ts,.js}'],
   migrationsRun: process.env.NODE_ENV === 'production',
   migrationsTableName: 'migrations',
