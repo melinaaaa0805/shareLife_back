@@ -31,16 +31,13 @@ describe('ShareLife API (e2e)', () => {
     await app.close();
   });
 
-  // Auth — inscription
+  // ── Auth — inscription ─────────────────────────────────────────────────────
+
   describe('POST /auth/register', () => {
     it('crée un compte et retourne un token JWT (201)', async () => {
       const res = await request(app.getHttpServer())
         .post('/auth/register')
-        .send({
-          email: TEST_EMAIL,
-          password: TEST_PASSWORD,
-          firstName: TEST_FIRSTNAME,
-        })
+        .send({ email: TEST_EMAIL, password: TEST_PASSWORD, firstName: TEST_FIRSTNAME })
         .expect(201);
 
       expect(res.body).toHaveProperty('access_token');
@@ -53,11 +50,7 @@ describe('ShareLife API (e2e)', () => {
       // (voir ANOM-2026-004 dans le dossier de maintenance).
       const res = await request(app.getHttpServer())
         .post('/auth/register')
-        .send({
-          email: TEST_EMAIL,
-          password: TEST_PASSWORD,
-          firstName: TEST_FIRSTNAME,
-        })
+        .send({ email: TEST_EMAIL, password: TEST_PASSWORD, firstName: TEST_FIRSTNAME })
         .expect(401);
 
       expect(res.body.message).toBe('Identifiants incorrects');
@@ -66,16 +59,13 @@ describe('ShareLife API (e2e)', () => {
     it('rejette un mot de passe trop faible (400)', async () => {
       await request(app.getHttpServer())
         .post('/auth/register')
-        .send({
-          email: `weak-${Date.now()}@test.dev`,
-          password: 'weak',
-          firstName: 'Test',
-        })
+        .send({ email: `weak-${Date.now()}@test.dev`, password: 'weak', firstName: 'Test' })
         .expect(400);
     });
   });
 
-  // Auth — connexion
+  // ── Auth — connexion ───────────────────────────────────────────────────────
+
   describe('POST /auth/login', () => {
     it('retourne un token JWT avec des identifiants valides (200)', async () => {
       const res = await request(app.getHttpServer())
@@ -95,9 +85,10 @@ describe('ShareLife API (e2e)', () => {
     });
   });
 
-  // Auth — endpoint protégé
+  // ── Auth — endpoint protégé ────────────────────────────────────────────────
+
   describe('GET /auth/me', () => {
-    it("retourne le profil de l'utilisateur avec un token valide (200)", async () => {
+    it('retourne le profil de l\'utilisateur avec un token valide (200)', async () => {
       const res = await request(app.getHttpServer())
         .get('/auth/me')
         .set('Authorization', `Bearer ${jwtToken}`)
@@ -108,7 +99,9 @@ describe('ShareLife API (e2e)', () => {
     });
 
     it('retourne 401 sans token', async () => {
-      await request(app.getHttpServer()).get('/auth/me').expect(401);
+      await request(app.getHttpServer())
+        .get('/auth/me')
+        .expect(401);
     });
   });
 });
